@@ -212,3 +212,7 @@ staticfiles/
 static/css/main.css
 backups
 node_modules/
+# Trained CNN weights. Too large for git (81 MB); published on Hugging Face
+# under Beau's profile with a public license -- download it from there after
+# cloning. Link to be added.
+*.onnx

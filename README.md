@@ -51,47 +51,69 @@ pip install -r requirements.txt
 ```
 
 ### 4. Environment Configuration
-Create a `.env` file in the root directory of the project.
-**Note**: The database configuration below utilizes port `5433` to avoid conflicts with default local Postgres installations.
+Create a `.env` file in the root directory of the project. **This file is the
+single source of truth for the database** — `docker-compose.yml` reads the
+`POSTGRES_*` values to initialise the container, and Django reads
+`DATABASE_URL`. Keep the two descriptions of the database in sync.
+
+**Note**: The host port is `5433`, not `5432`, to avoid conflicts with a
+Postgres installed directly on the host.
 
 ```env
 DEBUG=True
-SECRET_KEY=django-insecure-)#jv7)!%!#zq(qc7dy6(x%u%g%xdk&%fg@_@+=7@cl!d!j652g
+SECRET_KEY=<generate your own>
 ALLOWED_HOSTS=localhost,127.0.0.1
-DATABASE_URL=postgres://coffee_user:"Your Secret Password"@localhost:5433/coffee_shop_db
+
+POSTGRES_USER=admin
+POSTGRES_NAME=coffee_shop_db
+POSTGRES_PASSWORD=<your password>
+
+DATABASE_URL=postgres://admin:<your password>@localhost:5433/coffee_shop_db
 ```
+
+`.env` is gitignored — never commit real credentials.
 
 ### 5. Database Setup (Docker)
-Run the following command to start the PostgreSQL container:
+Start the PostgreSQL container from the repo root:
 
 ```bash
-docker run --name coffe_shop_db -e POSTGRES_PASSWORD="Your Secret Password" -p 5433:5432 -d postgres:15
+docker compose up -d
 ```
 
-Initialize the database user and permissions:
+That is the whole setup. Compose creates the database, the role, and the
+password from the `POSTGRES_*` values in `.env`, so there is no manual `CREATE
+USER` / `GRANT` step and none of the PG15 `public`-schema ownership trouble
+that hand-created roles run into. The role is the database owner and can create
+databases, which Django's test runner requires.
+
+Data lives in the named volume `maison_pgdata`. It survives `docker compose
+down` and is not a target for `docker volume prune`. To check the container is
+up and accepting connections:
+
 ```bash
-# Enter the container's Postgres shell
-docker exec -it coffe_shop_db psql -U postgres
-
-# Run the following SQL commands:
-CREATE USER coffee_user WITH PASSWORD 'Your Secret Password';
-CREATE DATABASE coffee_shop_db OWNER coffee_user;
-GRANT ALL PRIVILEGES ON DATABASE coffee_shop_db TO coffee_user;
-ALTER USER coffee_user CREATEDB; -- Required to run Django tests
-\q
+docker compose ps          # STATUS should read "healthy"
 ```
+
+To stop it, `docker compose down`; to stop it **and delete all data**,
+`docker compose down -v`.
 
 ### 6. Apply Migrations & Load Data
-Apply the Django migrations to create the creating database schema:
+Apply the Django migrations to create the database schema:
 ```bash
 python manage.py migrate
 ```
 
-Load the initial backup data (in this specific order to respect foreign keys):
+The schema is now ready and the app will run against an empty catalog. Add
+products through the Django admin (`python manage.py createsuperuser`, then
+`/admin/`).
+
+The maintainer's own seed fixtures live in `backups/`, which is deliberately
+not published. If you have them, load in this order to respect foreign keys:
+
 ```bash
-python manage.py loaddata backup_users.json
-python manage.py loaddata backup_products.json
-python manage.py loaddata backup_orders.json
+python manage.py loaddata backups/backup_users.json
+python manage.py loaddata backups/backup_products.json
+python manage.py loaddata backups/backup_orders.json
 ```
 
 ## Running the Application
