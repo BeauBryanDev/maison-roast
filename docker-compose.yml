@@ -1,0 +1,36 @@
+# PostgreSQL for the Maison Roast / CoffeeWebShop Django project.
+#
+# Credentials come from .env at the repo root -- nothing is hardcoded here, and
+# .env is gitignored. Start with:
+#
+#   docker compose up -d
+#
+# The host port is 5433 (not 5432) so this does not clash with a Postgres
+# installed on the host. DATABASE_URL in .env must point at that same port.
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: coffee_shop_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_NAME}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      # Named volume: survives `docker compose down` and is not a target for
+      # `docker volume prune`, unlike the anonymous volume this replaces.
+      - maison_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # $$ escapes compose interpolation: these expand inside the container,
+      # where the image has already set POSTGRES_USER / POSTGRES_DB.
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  maison_pgdata:

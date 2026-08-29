@@ -1,0 +1,14 @@
+{
+  "images_root": "/content/food41/images",
+  "num_menu_classes": 40,
+  "num_leftover_classes": 61,
+  "unknown_per_class": 30,
+  "unknown_total": 1830,
+  "test_moved_per_class": 150,
+  "test_moved_total": 6000,
+  "train_size": 34047,
+  "val_size": 3783,
+  "test_size": 4000,
+  "val_fraction": 0.1,
+  "seed": 42
+}
