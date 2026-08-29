@@ -206,3 +206,8 @@ build/
 Claude.md
 #Ignore notes.txt
 notes.txt
+# Node / Tailwind build
+node_modules/
+staticfiles/
+static/css/main.css
+backups
