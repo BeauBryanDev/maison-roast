@@ -1,23 +1,21 @@
-asgiref==3.11.0
-asttokens==3.0.1
-decorator==5.2.1
-Django==6.0.1
-executing==2.2.1
-ipython==9.9.0
-ipython_pygments_lexers==1.1.1
-jedi==0.19.2
-matplotlib-inline==0.2.1
-parso==0.8.5
-pexpect==4.9.0
-prompt_toolkit==3.0.52
-ptyprocess==0.7.0
-pure_eval==0.2.3
-Pygments==2.19.2
-pillow==12.1.0
-sqlparse==0.5.5
-stack-data==0.6.3
-traitlets==5.14.3
-wcwidth==0.2.14
-djangorestframework==3.16.1
-django-filter==25.2
+# Runtime dependencies for CoffeeWebShop.
+# Direct dependencies only, pinned. Install with:
+#   pip install -r requirements.txt
+
+# Framework
+Django==6.1
+
+# Configuration (.env / DATABASE_URL parsing)
+django-environ==0.14.0
+
+# Database driver (PostgreSQL)
 psycopg2-binary==2.9.11
+
+# REST API
+djangorestframework==3.18.0
+django-filter==26.1
+
+# Image handling. Currently unused at runtime -- product images are URLFields,
+# not ImageFields. Kept because MEDIA_ROOT/MEDIA_URL are configured for a
+# future switch to real uploads. Safe to drop if that never happens.
+pillow==12.1.0

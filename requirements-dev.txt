@@ -1,7 +1,8 @@
-django-environ==0.12.0
-django-filter==25.2
-djangorestframework==3.16.1
+# Development dependencies. Includes everything in requirements.txt.
+# Install with:
+#   pip install -r requirements-dev.txt
+
+-r requirements.txt
+
+# Interactive shell (python manage.py shell)
 ipython==9.9.0
-pillow==12.1.0
-pip==25.3
-psycopg2-binary==2.9.11

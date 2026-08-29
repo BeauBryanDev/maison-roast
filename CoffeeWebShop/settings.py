@@ -32,7 +32,7 @@ SECRET_KEY = 'django-insecure-)#jv7)!%!#zq(qc7dy6(x%u%g%xdk&%fg@_@+=7@cl!d!j652g
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [ 'coffeeshop.test', '127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -131,6 +131,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# Source assets (Tailwind output lives in static/css/main.css)
+STATICFILES_DIRS = [BASE_DIR / 'static']
+
+# Target for `manage.py collectstatic` in production
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Media files (User uploaded files)
 MEDIA_URL = '/media/'
