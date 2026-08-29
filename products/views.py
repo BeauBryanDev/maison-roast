@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.template import loader
 from django.shortcuts import get_object_or_404, render
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
 from django.views.generic import  ListView, DetailView , TemplateView , FormView
 from django.core.paginator import Paginator
@@ -12,6 +13,7 @@ from rest_framework import status
 from .models import Product
 from .forms import ProductForm
 from .serializers import ProductSerializer, CategorySerializer, ProductInCategorySerializer
+from .permissions import IsStaffOrReadOnly
 # Create your views here.
 
 class home(TemplateView):
@@ -40,13 +42,20 @@ class ProductDetailView(DetailView):
     
     
     
-class ProductFormView( FormView ):  
-    
+class ProductFormView( LoginRequiredMixin, UserPassesTestMixin, FormView ):
+
+    # Adding to the catalog is a staff action. Django's AccessMixin already does
+    # the right thing here: anonymous visitors are redirected to the login page,
+    # while authenticated non-staff users get a 403. Setting raise_exception
+    # would give anonymous users a 403 too, with no way to log in.
     template_name = 'products/add_product.html'
     form_class = ProductForm
-    success_url = reverse_lazy('product_list') 
-    
-    
+    success_url = reverse_lazy('product_list')
+
+    def test_func(self):
+        return self.request.user.is_staff
+
+
     def form_valid(self, form):
         form.save()
         return super().form_valid(form)
@@ -54,23 +63,20 @@ class ProductFormView( FormView ):
     
 
 class ProductListAPI( APIView ):
-    
-    authentication_classes  = []
-    permission_classes = []
-    
+
+    # Authentication falls back to the project default (SessionAuthentication).
+    # Reads stay public; writes require a staff account.
+    permission_classes = [IsStaffOrReadOnly]
+
     def get(self, request, format=None):
         
         id  = request.query_params.get('id', None)
         if id is not None:
-            
-            try:
-                product = get_object_or_404(Product, pk=id)
-                serializer = ProductSerializer(product)
-                return Response(serializer.data, status=status.HTTP_200_OK)
-        
-            except Product.DoesNotExist:
-                return Response({'error': 'Product not found.'}, status=status.HTTP_404_NOT_FOUND)
-        
+            # get_object_or_404 raises Http404, which DRF renders as a clean 404.
+            product = get_object_or_404(Product, pk=id)
+            serializer = ProductSerializer(product)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
         products = Product.objects.all().order_by('-created_at')
         serializer = ProductSerializer(products, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)

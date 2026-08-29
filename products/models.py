@@ -17,7 +17,15 @@ class Product(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.name)
+            # slug is unique, so two products sharing a name would collide and
+            # raise IntegrityError. Suffix a counter until the slug is free.
+            base = slugify(self.name) or 'product'
+            slug = base
+            counter = 2
+            while Product.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f'{base}-{counter}'
+                counter += 1
+            self.slug = slug
         super().save(*args, **kwargs)
 
     def __str__(self):
