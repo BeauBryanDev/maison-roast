@@ -211,3 +211,4 @@ node_modules/
 staticfiles/
 static/css/main.css
 backups
+node_modules/
