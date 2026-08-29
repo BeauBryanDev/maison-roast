@@ -1,13 +1,13 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.urls import reverse_lazy
-from django.views.generic.edit import CreateView
+from django.db import transaction
+from django.db.models import F
 from django.views import View
 from django.contrib import messages
 from orders.models import Order, ProductOrder
 from products.models import Product
-from .forms import OrderForm, ProductOrderForm
+from .forms import ProductOrderForm
 import uuid
 from datetime import datetime
 
@@ -34,28 +34,9 @@ class OrderDetail(LoginRequiredMixin, DetailView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['order_form'] = OrderForm(instance=self.object)
-        context['product_order_form'] = ProductOrderForm()
         return context
 
 
-class OrderCreateView(LoginRequiredMixin, CreateView):
-    model = Order
-    form_class = OrderForm
-    template_name = 'orders/order_form.html'
-    success_url =  reverse_lazy('order_list')
-    
-    def  form_valid(self, form):
-        # Attach the current user before saving the order instance
-        form.instance.user = self.request.user
-        return super().form_valid(form)
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['order_form'] = self.get_form()
-        return context
-            
-    
 class CreateOrderProductView(LoginRequiredMixin, View):
     """Handle buying a product - creates Order and ProductOrder"""
 
@@ -70,7 +51,6 @@ class CreateOrderProductView(LoginRequiredMixin, View):
             # Pre-fill form with product data
             form = ProductOrderForm(initial={
                 'product_name': product.id,
-                'price_per_item': product.price,
                 'quantity': 1
             })
 
@@ -90,49 +70,84 @@ class CreateOrderProductView(LoginRequiredMixin, View):
         form = ProductOrderForm(request.POST)
 
         if form.is_valid():
-            # Get the product
-            product = form.cleaned_data['product_name']
             quantity = form.cleaned_data['quantity']
-            price_per_item = form.cleaned_data['price_per_item']
+            product = form.cleaned_data['product_name']
+            product_id = product.pk
 
-            # Check if product has enough stock
-            if product.stock < quantity:
-                messages.error(request, f'Not enough stock! Only {product.stock} units available.')
+            # An order is a record we may need to act on -- a receipt, a refund,
+            # a delivery question. Writing a placeholder address onto it would
+            # make it look contactable when it is not, so refuse instead. This
+            # is checked before the transaction so no row lock is taken for a
+            # purchase that cannot proceed.
+            if not request.user.email:
+                messages.error(
+                    request,
+                    'Your account has no email address. Add one to your profile '
+                    'before placing an order.'
+                )
                 return render(request, 'orders/product_order_form.html', {
                     'product_order_form': form,
                     'product': product
                 })
 
-            # Generate unique order number
-            timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
-            unique_id = str(uuid.uuid4())[:8].upper()
-            order_number = f'ORD-{timestamp}-{unique_id}'
+            # The whole purchase is one transaction: either the order and the
+            # stock decrement both land, or neither does.
+            with transaction.atomic():
+                # Re-fetch the product with a row lock held for the life of the
+                # transaction. The copy the form loaded was read without a lock,
+                # so it is not safe to check stock against -- a concurrent buyer
+                # could pass the same check against the same units.
+                product = Product.objects.select_for_update().get(pk=product_id)
 
-            # Get user information
-            user = request.user
-            customer_name = user.get_full_name() or user.username
-            customer_email = user.email or 'noemail@example.com'
+                if not product.available:
+                    messages.error(request, f'{product.name} is not currently available.')
+                    return render(request, 'orders/product_order_form.html', {
+                        'product_order_form': form,
+                        'product': product
+                    })
 
-            # Create the Order
-            order = Order.objects.create(
-                user=user,
-                order_number=order_number,
-                customer_name=customer_name,
-                customer_email=customer_email,
-                is_active=True
-            )
+                # Check if product has enough stock
+                if product.stock < quantity:
+                    messages.error(request, f'Not enough stock! Only {product.stock} units available.')
+                    return render(request, 'orders/product_order_form.html', {
+                        'product_order_form': form,
+                        'product': product
+                    })
 
-            # Create the ProductOrder
-            ProductOrder.objects.create(
-                order=order,
-                product_name=product,
-                quantity=quantity,
-                price_per_item=price_per_item
-            )
+                # Generate unique order number
+                timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+                unique_id = str(uuid.uuid4())[:8].upper()
+                order_number = f'ORD-{timestamp}-{unique_id}'
 
-            # Update product stock
-            product.stock -= quantity
-            product.save()
+                # Get user information
+                user = request.user
+                customer_name = user.get_full_name() or user.username
+                # Guaranteed non-empty by the check above.
+                customer_email = user.email
+
+                # Create the Order
+                order = Order.objects.create(
+                    user=user,
+                    order_number=order_number,
+                    customer_name=customer_name,
+                    customer_email=customer_email,
+                    is_active=True
+                )
+
+                # Create the ProductOrder. Price always comes from the catalog
+                # row, never from the request. It is stored on the line item so
+                # the order keeps its historical price if the product is
+                # repriced later.
+                ProductOrder.objects.create(
+                    order=order,
+                    product_name=product,
+                    quantity=quantity,
+                    price_per_item=product.price
+                )
+
+                # Decrement stock in the database rather than in Python, so only
+                # the stock column is written and the arithmetic cannot be lost.
+                Product.objects.filter(pk=product.pk).update(stock=F('stock') - quantity)
 
             # Success message
             messages.success(
