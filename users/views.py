@@ -1,11 +1,6 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponse
-from django.views import generic
-from django.views.generic import TemplateView
 from django.contrib.auth import logout, login
 from django.views import View
-from django.urls import reverse_lazy
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 from .forms import CustomUserCreationForm
 
@@ -21,6 +16,7 @@ class LogoutView(View):
     def post(self, request):
         """Actually logout the user"""
         logout(request)
+        
         return redirect('home')
 
 
@@ -31,16 +27,25 @@ class RegisterView(View):
         """Show registration form"""
         if request.user.is_authenticated:
             return redirect('home')
+        
         form = CustomUserCreationForm()
+        
         return render(request, 'users/register.html', {'form': form})
 
     def post(self, request):
         """Process registration form"""
         form = CustomUserCreationForm(request.POST)
+        
         if form.is_valid():
+            
             user = form.save()
+            
             # Automatically login the user after registration
             login(request, user)
-            messages.success(request, f'Welcome to Coffee Shop, {user.username}! Your account has been created successfully.')
+            
+            messages.success(request, 
+                             f'Welcome to Coffee Shop, {user.username}! Your account has been created successfully.')
+            
             return redirect('home')
+        
         return render(request, 'users/register.html', {'form': form})

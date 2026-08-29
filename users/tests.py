@@ -3,6 +3,8 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 from .forms import CustomUserCreationForm
 
+from products.models import Product
+from orders.models import Order, ProductOrder
 User = get_user_model()
 
 class UserAuthenticationTests(TestCase):
@@ -119,3 +121,74 @@ class UserRegistrationTests(TestCase):
         self.assertTrue(form.errors)
         self.assertIn('password2', form.errors)
         self.assertEqual(form.errors['password2'], ["The two password fields didn’t match."])
+
+
+class AdminSmokeTestCase(TestCase):
+    """The admin is the staff-facing half of this app and had no tests at all.
+
+    These exercise every registered screen so a bad ModelAdmin option (which
+    Django only raises at request time, not at `check` time) cannot ship silently.
+    """
+
+    def setUp(self):
+        self.superuser = User.objects.create_superuser(
+            username="root", password="testpassword", email="root@example.com",
+        )
+        self.client.force_login(self.superuser)
+
+    def test_all_admin_changelists_render(self):
+        for url in (
+            "/admin/users/customuser/",
+            "/admin/products/product/",
+            "/admin/orders/order/",
+            "/admin/orders/productorder/",
+        ):
+            with self.subTest(url=url):
+                self.assertEqual(self.client.get(url).status_code, 200)
+
+    def test_all_admin_add_forms_render(self):
+        for url in (
+            "/admin/users/customuser/add/",
+            "/admin/products/product/add/",
+            "/admin/orders/order/add/",
+            "/admin/orders/productorder/add/",
+        ):
+            with self.subTest(url=url):
+                self.assertEqual(self.client.get(url).status_code, 200)
+
+    def test_add_user_form_collects_email(self):
+        """email is unique and non-blank; without it on the add form the second
+        user created through the admin fails with an IntegrityError."""
+        response = self.client.get("/admin/users/customuser/add/")
+        for field in ("email", "phone_number", "address"):
+            with self.subTest(field=field):
+                self.assertContains(response, f'name="{field}"')
+
+    def test_two_users_can_be_added_through_the_admin(self):
+        for i in (1, 2):
+            response = self.client.post("/admin/users/customuser/add/", {
+                "username": f"staffer{i}",
+                "email": f"staffer{i}@example.com",
+                "password1": "Sup3r-Secret-Pw!",
+                "password2": "Sup3r-Secret-Pw!",
+            })
+            self.assertIn(response.status_code, (200, 302))
+
+        self.assertTrue(User.objects.filter(username="staffer1").exists())
+        self.assertTrue(User.objects.filter(username="staffer2").exists())
+
+    def test_order_change_form_shows_line_items_inline(self):
+        product = Product.objects.create(
+            name="Inline Test Product", description="d", price=3.00, stock=5, category="c",
+        )
+        order = Order.objects.create(
+            user=self.superuser, order_number="ADM-1", customer_name="Root",
+            customer_email="root@example.com", is_active=True,
+        )
+        ProductOrder.objects.create(
+            order=order, product=product, quantity=2, price_per_item=product.price,
+        )
+
+        response = self.client.get(f"/admin/orders/order/{order.pk}/change/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "product_orders-0-quantity")
