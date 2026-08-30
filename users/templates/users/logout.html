@@ -1,60 +1,36 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Logout - Coffee Shop{% endblock %}
+{% block title %}Logout — Maison Roast{% endblock %}
 
 {% block content %}
-<div class="min-h-[70vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full">
-        <!-- Logout Confirmation Card -->
-        <div class="bg-gradient-to-br from-amber-900 via-orange-900 to-amber-950 rounded-3xl shadow-2xl overflow-hidden fade-in">
-            <!-- Coffee Cup Icon Header -->
-            <div class="relative h-32 bg-gradient-to-r from-amber-800 to-orange-800 overflow-hidden">
-                <div class="relative flex justify-center items-center h-full">
-                    <div class="bg-white rounded-full p-4 shadow-lg">
-                        <svg class="w-12 h-12 text-amber-800" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/>
-                        </svg>
-                    </div>
-                </div>
-            </div>
+<div class="fade-in mx-auto max-w-md">
 
-            <!-- Logout Confirmation Content -->
-            <div class="px-8 py-10 bg-white text-center">
-                <h2 class="text-3xl font-bold text-gray-800 mb-4">Come Back Soon!</h2>
-                <p class="text-gray-600 mb-8">Are you sure you want to logout from your Coffee Shop account?</p>
+    <div class="panel-cream paper p-10 text-center">
+        <img src="{% static 'icons/coffee_pot.svg' %}" alt=""
+             class="mx-auto h-16 w-16 opacity-70" aria-hidden="true">
 
-                <div class="space-y-4">
-                    <!-- Logout Form -->
-                    <form method="post" action="{% url 'logout' %}">
-                        {% csrf_token %}
-                        <button type="submit"
-                                class="w-full bg-gradient-to-r from-orange-700 to-red-800 text-white py-4 px-8 rounded-xl font-bold text-lg hover:from-orange-800 hover:to-red-900 transform hover:scale-[1.02] transition duration-300 shadow-lg hover:shadow-xl">
-                            <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                            </svg>
-                            Yes, Logout
-                        </button>
-                    </form>
+        <h1 class="mt-6 font-display text-2xl font-bold text-espresso">Leaving so soon?</h1>
+        <p class="mt-3 text-roast">
+            {% if user.is_authenticated %}
+                You are signed in as <span class="font-semibold">{{ user.username }}</span>.
+            {% endif %}
+            Sign out of Maison Roast?
+        </p>
 
-                    <!-- Cancel Button -->
-                    <a href="{% url 'home' %}"
-                       class="block w-full border-2 border-amber-700 text-amber-700 py-4 px-8 rounded-xl font-semibold hover:bg-amber-50 transition duration-300">
-                        <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                        </svg>
-                        Stay Logged In
-                    </a>
-                </div>
+        <p class="heart-rule text-terracotta" aria-hidden="true">&#9825;</p>
 
-                <!-- Additional Message -->
-                <p class="mt-6 text-sm text-gray-500">
-                    We'll miss you! Your favorite coffee is waiting for your return.
-                </p>
-            </div>
-
-            <!-- Coffee Beans Footer Decoration -->
-            <div class="h-3 bg-gradient-to-r from-amber-800 via-orange-800 to-amber-800"></div>
+        <div class="flex flex-col gap-3 sm:flex-row sm:justify-center">
+            {# GET shows this confirmation; the POST below is what actually logs out. #}
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn-terracotta w-full sm:w-auto">Yes, sign out</button>
+            </form>
+            <a href="{% url 'home' %}"
+               class="inline-flex items-center justify-center rounded-full border border-roast/40 px-8 py-3 font-body uppercase tracking-wider text-roast transition hover:border-roast hover:bg-roast/5">
+                Stay a while
+            </a>
         </div>
     </div>
 </div>
-{% endblock content %}
+{% endblock %}

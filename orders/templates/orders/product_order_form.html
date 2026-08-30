@@ -1,114 +1,134 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Add to Cart - Coffee Shop{% endblock %}
+{% block title %}Buy {% if product %}{{ product.name }}{% else %}a Product{% endif %} — Maison Roast{% endblock %}
+
+{% comment %}
+SECURITY -- read before editing (see CLAUDE.md "Invariants"):
+
+  * There is NO price_per_item field, and there must never be one. The price is
+    read from Product.price in CreateOrderProductView; a form field or hidden
+    input would let a customer set their own price.
+  * The product field is named "product" (renamed from product_name in
+    orders/0004). The hidden input below is what identifies the product.
+
+orders.tests.CheckoutSecurityTestCase covers both.
+{% endcomment %}
 
 {% block content %}
-<div class="fade-in max-w-3xl mx-auto bg-white p-8 rounded-3xl shadow-2xl">
-    <h1 class="text-4xl font-bold text-gray-800 mb-8">Buy Product</h1>
+<div class="fade-in mx-auto max-w-3xl">
 
-    <!-- Display Messages -->
-    {% if messages %}
-    <div class="mb-6">
-        {% for message in messages %}
-        <div class="{% if message.tags == 'success' %}bg-green-100 border-l-4 border-green-500 text-green-700{% elif message.tags == 'error' %}bg-red-100 border-l-4 border-red-500 text-red-700{% else %}bg-blue-100 border-l-4 border-blue-500 text-blue-700{% endif %} p-4 rounded mb-2">
-            <p class="font-semibold">{{ message }}</p>
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-    
-    <!-- Product Summary -->
+    <header class="text-center">
+        <p class="filigree text-gold">Confirm Your Order</p>
+    </header>
+
     {% if product %}
-    <div class="mb-8 bg-amber-50 rounded-2xl p-6 border-2 border-amber-200">
-        <h2 class="text-2xl font-bold text-gray-800 mb-4">Product Details</h2>
-        <div class="space-y-3">
-            <div class="flex justify-between">
-                <span class="text-gray-600 font-semibold">Product:</span>
-                <span class="text-gray-800 font-bold">{{ product.name }}</span>
-            </div>
-            <div class="flex justify-between">
-                <span class="text-gray-600 font-semibold">Price:</span>
-                <span class="text-amber-700 font-bold text-xl">${{ product.price }}</span>
-            </div>
-            <div class="flex justify-between">
-                <span class="text-gray-600 font-semibold">Available Stock:</span>
-                <span class="text-gray-800 font-bold">{{ product.stock }} units</span>
-            </div>
-            <div class="flex justify-between">
-                <span class="text-gray-600 font-semibold">Category:</span>
-                <span class="text-gray-800 font-bold">{{ product.category }}</span>
-            </div>
+    <!-- ==================== Product summary ==================== -->
+    <section class="panel-dark mt-8 flex flex-col gap-5 p-6 sm:flex-row sm:items-center">
+        <div class="img-frame h-28 w-28 shrink-0 rounded-xl" style="aspect-ratio: 1 / 1;">
+            {% if product.product_image %}
+            <img src="{{ product.product_image }}" alt="{{ product.name }}" data-fallback>
+            {% endif %}
+            <span class="img-fallback" {% if product.product_image %}hidden{% endif %}>
+                <img src="{% static 'icons/coffee_pot.svg' %}" alt="" class="h-12 w-12" aria-hidden="true">
+            </span>
         </div>
-    </div>
+
+        <div class="min-w-0 flex-1">
+            <h1 class="font-display text-2xl font-bold text-crema">{{ product.name }}</h1>
+            <p class="mt-1 text-xs uppercase tracking-wider text-gold">{{ product.category }}</p>
+            <p class="mt-3 text-sm text-crema/70">{{ product.stock }} in stock</p>
+        </div>
+
+        <div class="shrink-0 text-right">
+            <p class="text-xs uppercase tracking-wider text-crema/50">Price</p>
+            <p class="font-display text-3xl text-terracotta-400">${{ product.price }}</p>
+        </div>
+    </section>
     {% endif %}
-    
-    <!-- Order Form -->
-    <form method="post" class="space-y-6">
+
+    <!-- ==================== Order form ==================== -->
+    <form method="post" class="panel-cream paper mt-6 p-8">
         {% csrf_token %}
 
-        {% if product %}
-        <!-- Read-only Product Name Display -->
-        <div class="mb-6">
-            <label class="block text-gray-700 font-semibold mb-2">Selected Product</label>
-            <div class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg text-gray-800 font-semibold">
-                {{ product.name }}
-            </div>
-            <!-- Hidden field for form submission -->
-            <input type="hidden" name="product_name" value="{{ product.id }}">
-        </div>
-
-        <!-- Read-only Price Per Item Display -->
-        <div class="mb-6">
-            <label class="block text-gray-700 font-semibold mb-2">Price Per Item</label>
-            <div class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg text-amber-700 font-bold text-lg">
-                ${{ product.price }}
-            </div>
-            <!-- Display only. The price is read from the catalog server-side. -->
-        </div>
-
-        <!-- Editable Quantity Field -->
-        <div class="mb-6">
-            <label for="id_quantity" class="block text-gray-700 font-semibold mb-2">Quantity</label>
-            <input type="number" name="quantity" id="id_quantity" min="1" max="{{ product.stock }}" value="1" required
-                   class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-amber-700 transition duration-300 bg-white">
-            {% if product_order_form.quantity.errors %}
-                <p class="text-red-600 mt-2">{{ product_order_form.quantity.errors }}</p>
-            {% endif %}
-            <p class="text-gray-500 text-sm mt-1">Enter the quantity you want to order (Max: {{ product.stock }} available)</p>
-        </div>
-        
-        {% else %}
-        <!-- Fallback form if no product is pre-selected -->
-        <div class="mb-6">
-            <label for="id_product_name" class="block text-gray-700 font-semibold mb-2">Select Product</label>
-            {{ product_order_form.product_name }}
-            {% if product_order_form.product_name.errors %}
-                <p class="text-red-600 mt-2">{{ product_order_form.product_name.errors }}</p>
-            {% endif %}
-        </div>
-        
-        <div class="mb-6">
-            <label for="id_quantity" class="block text-gray-700 font-semibold mb-2">Quantity</label>
-            {{ product_order_form.quantity }}
-            {% if product_order_form.quantity.errors %}
-                <p class="text-red-600 mt-2">{{ product_order_form.quantity.errors }}</p>
-            {% endif %}
-            <p class="text-gray-500 text-sm mt-1">Enter the quantity you want to order</p>
+        {% if product_order_form.non_field_errors %}
+        <div class="mb-6 rounded-lg border-l-4 border-red-700 bg-red-100 p-4 text-sm text-red-900">
+            {{ product_order_form.non_field_errors }}
         </div>
         {% endif %}
-        
-        <!-- Action Buttons -->
-        <div class="flex gap-4 justify-end">
-            <a href="{% url 'product_list' %}" class="bg-gray-400 hover:bg-gray-500 text-white py-3 px-8 rounded-lg font-semibold transition duration-300">
+
+        {% if product %}
+            {# Identifies the product. Renamed to "product" in orders/0004. #}
+            <input type="hidden" name="product" value="{{ product.id }}">
+
+            <div class="mb-6">
+                <span class="mb-2 block font-display text-sm uppercase tracking-widest text-roast/70">
+                    Selected Product
+                </span>
+                <p class="rounded-lg border border-gold/40 bg-crema-400/40 px-4 py-3 font-semibold text-espresso">
+                    {{ product.name }}
+                </p>
+            </div>
+
+            <div class="mb-6">
+                <span class="mb-2 block font-display text-sm uppercase tracking-widest text-roast/70">
+                    Price Per Item
+                </span>
+                {% comment %}
+                Display only -- deliberately NOT an input of any kind. The server
+                reads product.price and ignores anything posted for it.
+                {% endcomment %}
+                <p class="rounded-lg border border-gold/40 bg-crema-400/40 px-4 py-3 font-display text-xl font-bold text-terracotta">
+                    ${{ product.price }}
+                </p>
+            </div>
+
+            <div class="mb-6">
+                <label for="id_quantity" class="mb-2 block font-display text-sm uppercase tracking-widest text-roast/70">
+                    Quantity
+                </label>
+                <input type="number" name="quantity" id="id_quantity"
+                       min="1" max="{{ product.stock }}" value="1" required
+                       class="w-full rounded-lg border border-gold/50 bg-crema-200 px-4 py-3 text-espresso
+                              focus:border-terracotta focus:outline-none focus:ring-1 focus:ring-terracotta">
+                {% if product_order_form.quantity.errors %}
+                <p class="mt-2 text-sm font-semibold text-red-800">{{ product_order_form.quantity.errors }}</p>
+                {% endif %}
+                <p class="mt-2 text-xs text-roast/60">Maximum {{ product.stock }} available.</p>
+            </div>
+
+        {% else %}
+            {# Fallback: no product pre-selected, so the visitor picks one. #}
+            <div class="mb-6">
+                <label for="id_product" class="mb-2 block font-display text-sm uppercase tracking-widest text-roast/70">
+                    Select Product
+                </label>
+                {{ product_order_form.product }}
+                {% if product_order_form.product.errors %}
+                <p class="mt-2 text-sm font-semibold text-red-800">{{ product_order_form.product.errors }}</p>
+                {% endif %}
+            </div>
+
+            <div class="mb-6">
+                <label for="id_quantity" class="mb-2 block font-display text-sm uppercase tracking-widest text-roast/70">
+                    Quantity
+                </label>
+                {{ product_order_form.quantity }}
+                {% if product_order_form.quantity.errors %}
+                <p class="mt-2 text-sm font-semibold text-red-800">{{ product_order_form.quantity.errors }}</p>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-end">
+            <a href="{% url 'product_list' %}"
+               class="inline-flex items-center justify-center rounded-full border border-roast/40 px-8 py-3 font-body uppercase tracking-wider text-roast transition hover:border-roast hover:bg-roast/5">
                 Cancel
             </a>
-            <button type="reset" class="bg-green-400 hover:bg-green-500 text-white py-3 px-8 rounded-lg font-semibold transition duration-300">
-                Add to Favorites
-            </button>
-            <button type="submit" class="bg-orange-600 text-white py-3 px-8 rounded-lg font-semibold hover:from-amber-800 hover:to-orange-900 transform hover:scale-105 transition duration-300 shadow-lg border border-orange-900" >
-                Buy Product
-            </button>
+            <button type="submit" class="btn-terracotta">Buy Now</button>
         </div>
     </form>
+
+    <p class="heart-rule" aria-hidden="true">&#9825;</p>
 </div>
 {% endblock %}

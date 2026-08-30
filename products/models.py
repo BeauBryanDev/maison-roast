@@ -22,13 +22,18 @@ class Product(models.Model):
             base = slugify(self.name) or 'product'
             slug = base
             counter = 2
+            
             while Product.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                
                 slug = f'{base}-{counter}'
                 counter += 1
+                
             self.slug = slug
+            
         super().save(*args, **kwargs)
 
     def __str__(self):
+        
         return f"{self.name} - ${self.price:.2f} - Stock: {self.stock}"
     
     

@@ -4,159 +4,242 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Coffee Shop{% endblock %}</title>
+    <title>{% block title %}Maison Roast — Coffee &amp; Patisserie{% endblock %}</title>
+
+    <link rel="icon" type="image/svg+xml" href="{% static 'icons/bistrot.svg' %}">
+
+    {# Preload the two faces above the fold so the vintage wordmark does not flash. #}
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+          href="{% static 'css/files/playfair-display-latin-700-normal.woff2' %}">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+          href="{% static 'css/files/lato-latin-400-normal.woff2' %}">
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
 </head>
-<body class="bg-gradient-to-br from-amber-50 to-orange-100 min-h-screen">
-    <!-- Navigation -->
-    <nav class="bg-gradient-to-r from-amber-800 to-orange-900 shadow-lg sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <a href="{% url 'home' %}" class="flex items-center space-x-2">
-                        <svg class="w-8 h-8 text-amber-200" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/>
-                        </svg>
-                        <span class="text-2xl font-bold text-white">Coffee Shop</span>
-                    </a>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <a href="{% url 'home' %}" class="text-amber-100 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition duration-300">
-                        Home
-                    </a>
-                    <a href="{% url 'product_list' %}" class="text-amber-100 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition duration-300">
-                        Products
-                    </a>
+{# data-rail is read by basil-panel.js and restored from localStorage before paint. #}
+<body class="min-h-screen bg-espresso font-body text-crema" data-rail="open">
 
-                    {% if user.is_authenticated %}
-                        <!-- User Profile Dropdown -->
-                        <div class="flex items-center space-x-3">
-                            <span class="text-amber-100 text-sm">
-                                <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
-                                </svg>
-                                {{ user.username }}
-                            </span>
-                            <a href="/admin/" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-300">
-                                Admin
-                            </a>
-                            <a href="{% url 'logout' %}" class="bg-orange-700 hover:bg-orange-800 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-300 flex items-center">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                                </svg>
-                                Logout
-                            </a>
-                            <a href="{% url 'order_list' %}" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-300">
-                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
-                                </svg>
-                                My Orders
-                            </a>
-                            <a href="{% url 'add_product_order' %}" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-300">
-                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
-                                </svg>
-                                Add Product
-                            </a>
-                        </div>
-                    {% else %}
-                        <a href="{% url 'login' %}" class="text-amber-100 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition duration-300">
-                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
-                            </svg>
-                            Login
-                        </a>
-                        <a href="{% url 'register' %}" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-300">
-                            Sign Up
-                        </a>
+    <!-- ==================== Navigation ==================== -->
+    <nav class="sticky top-0 z-50 border-b border-gold/25 bg-espresso/95 backdrop-blur">
+        <div class="mx-auto flex max-w-[1600px] items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+
+            <!-- Wordmark -->
+            <a href="{% url 'home' %}" class="flex shrink-0 items-center gap-3">
+                <img src="{% static 'icons/coffee_cup1.svg' %}" alt=""
+                     class="h-10 w-10 shrink-0" aria-hidden="true">
+                <span class="leading-none">
+                    <span class="block font-display text-2xl font-bold tracking-wide text-crema sm:text-3xl">
+                        MAISON ROAST
+                    </span>
+                    <span class="block font-body text-[0.6rem] tracking-widest2 text-gold sm:text-xs">
+                        COFFEE &amp; PATISSERIE
+                    </span>
+                </span>
+            </a>
+
+            <!-- Desktop nav -->
+            <div class="hidden items-center gap-7 lg:flex">
+                <a href="{% url 'home' %}" class="nav-link">Home</a>
+                <a href="{% url 'product_list' %}" class="nav-link">Menu</a>
+                <a href="{% url 'about' %}" class="nav-link">About Us</a>
+
+                {% if user.is_authenticated %}
+                    <a href="{% url 'order_list' %}" class="nav-link">My Orders</a>
+                    {% if user.is_staff %}
+                        {# Staff-only: the view 403s for everyone else, so do not advertise it. #}
+                        <a href="{% url 'product_add' %}" class="nav-link">Add Product</a>
+                        <a href="/admin/" class="nav-link">Admin</a>
                     {% endif %}
-                </div>
+                    <a href="{% url 'profile' %}"
+                       class="flex items-center gap-2 border-l border-gold/25 pl-6 text-sm text-crema/70 transition hover:text-gold-400"
+                       title="My profile">
+                        <img src="{% static 'icons/user_avatar.svg' %}" alt=""
+                             class="h-7 w-7 rounded-full border border-gold/40 bg-roast p-0.5" aria-hidden="true">
+                        {{ user.username }}
+                    </a>
+                    <a href="{% url 'logout' %}" class="btn-ghost text-xs">Logout</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="nav-link">Login</a>
+                    <a href="{% url 'register' %}" class="btn-terracotta px-6 py-2 text-xs">Sign Up</a>
+                {% endif %}
+            </div>
+
+            <!-- Mobile toggle -->
+            <button type="button" id="nav-toggle" class="btn-ghost px-3 py-2 lg:hidden"
+                    aria-expanded="false" aria-controls="mobile-nav" aria-label="Open menu">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Mobile nav -->
+        <div id="mobile-nav" hidden
+             class="border-t border-gold/25 bg-espresso-800 px-4 py-4 lg:hidden">
+            <div class="flex flex-col gap-3">
+                <a href="{% url 'home' %}" class="nav-link">Home</a>
+                <a href="{% url 'product_list' %}" class="nav-link">Menu</a>
+                <a href="{% url 'about' %}" class="nav-link">About Us</a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'profile' %}" class="nav-link flex items-center gap-2">
+                        <img src="{% static 'icons/user_avatar.svg' %}" alt=""
+                             class="h-6 w-6 rounded-full border border-gold/40 bg-roast p-0.5" aria-hidden="true">
+                        {{ user.username }}
+                    </a>
+                    <a href="{% url 'order_list' %}" class="nav-link">My Orders</a>
+                    {% if user.is_staff %}
+                        <a href="{% url 'product_add' %}" class="nav-link">Add Product</a>
+                        <a href="/admin/" class="nav-link">Admin</a>
+                    {% endif %}
+                    <a href="{% url 'logout' %}" class="nav-link">Logout</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="nav-link">Login</a>
+                    <a href="{% url 'register' %}" class="nav-link">Sign Up</a>
+                {% endif %}
             </div>
         </div>
     </nav>
-    {% if user.is_authenticated %}
-    <div class="bg-gradient-to-r from-amber-700 via-orange-700 to-amber-700 text-white px-4 py-3 shadow-md">
-        <div class="max-w-7xl mx-auto flex items-center justify-between">
-            <div class="flex items-center space-x-2">
-                <svg class="w-5 h-5 text-amber-200" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/>
-                </svg>
-                <span class="font-semibold">Welcome back, {{ user.username }}!</span>
-                <span class="text-amber-100 text-sm">Enjoy your premium coffee experience</span>
-            </div>
-            <a href="{% url 'logout' %}" class="text-amber-100 hover:text-white text-sm font-semibold underline transition duration-300">
-                Quick Logout
-            </a>
-        </div>
-    </div>
-    {% else %}
-    <div class="bg-gradient-to-r from-orange-100 via-amber-100 to-orange-100 text-amber-900 px-4 py-3 shadow-sm">
-        <div class="max-w-7xl mx-auto text-center">
-            <svg class="w-5 h-5 inline mr-2 text-amber-700" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-            </svg>
-            <span class="font-semibold">
-                <a href="{% url 'login' %}" class="text-amber-800 hover:text-amber-950 underline transition duration-300">Login</a>
-                or
-                <a href="{% url 'register' %}" class="text-amber-800 hover:text-amber-950 underline transition duration-300">Sign Up</a>
-                to unlock exclusive coffee deals and track your orders!
-            </span>
-        </div>
-    </div>
-    {% endif %}
-    <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Display Messages -->
-        {% if messages %}
-        <div class="mb-6">
-            {% for message in messages %}
-            <div class="{% if message.tags == 'success' %}bg-green-100 border-l-4 border-green-500 text-green-700{% elif message.tags == 'error' %}bg-red-100 border-l-4 border-red-500 text-red-700{% elif message.tags == 'warning' %}bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700{% else %}bg-blue-100 border-l-4 border-blue-500 text-blue-700{% endif %} p-4 rounded mb-2 fade-in shadow-md">
-                <div class="flex items-center">
-                    <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                        {% if message.tags == 'success' %}
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                        {% elif message.tags == 'error' %}
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                        {% else %}
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                        {% endif %}
-                    </svg>
+
+    {% comment %}
+    Two-column shell. The rail column is removed from the flex row when
+    data-rail="closed", so main stretches to full width -- see basil-panel.js.
+    {% endcomment %}
+    <div id="shell" class="mx-auto flex max-w-[1600px] gap-6 px-4 py-6 sm:px-6 lg:px-8">
+
+        <main class="min-w-0 flex-1">
+            {% if messages %}
+            <div class="mb-6 space-y-2">
+                {% for message in messages %}
+                <div class="fade-in rounded-lg border-l-4 p-4 shadow-md
+                            {% if message.tags == 'success' %}border-green-600 bg-green-950/60 text-green-200
+                            {% elif message.tags == 'error' %}border-red-600 bg-red-950/60 text-red-200
+                            {% elif message.tags == 'warning' %}border-yellow-600 bg-yellow-950/60 text-yellow-200
+                            {% else %}border-gold bg-roast text-crema{% endif %}">
                     <p class="font-semibold">{{ message }}</p>
                 </div>
+                {% endfor %}
             </div>
-            {% endfor %}
-        </div>
-        {% endif %}
+            {% endif %}
 
-        {% block content %}
-        {% endblock %}
-    </main>
+            {% block content %}{% endblock %}
+        </main>
 
-    <!-- Footer -->
-    <footer class="bg-gradient-to-r from-amber-900 to-orange-950 text-white mt-16">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div>
-                    <h3 class="text-lg font-semibold mb-4 text-amber-200">About Us</h3>
-                    <p class="text-amber-100">Premium coffee products delivered with passion and quality.</p>
+        <!-- ==================== Basil rail ==================== -->
+        {% comment %}
+        Layout shell only. The agent itself is MASTER_SPEC.md work and is not built
+        yet, so the composer is disabled rather than faking a conversation.
+        {% endcomment %}
+        <aside id="basil-rail"
+               class="hidden w-[420px] shrink-0 flex-col self-start overflow-hidden rounded-2xl
+                      border border-gold/25 bg-espresso-800
+                      lg:sticky lg:top-24 lg:flex lg:h-[85vh]"
+               aria-label="Basil, the coffee concierge">
+
+            <header class="flex shrink-0 items-start gap-3 border-b border-gold/20 p-4">
+                <img src="{% static 'icons/basil_avatar.svg' %}" alt=""
+                     class="h-12 w-12 shrink-0 rounded-full border border-gold/50 bg-roast p-1"
+                     aria-hidden="true">
+                <div class="min-w-0 flex-1">
+                    <p class="font-display text-lg font-bold tracking-wide text-crema">BASIL</p>
+                    <p class="text-xs text-crema/70">Your AI Coffee Concierge</p>
+                    <p class="mt-1 flex items-center gap-1.5 text-xs text-gold">
+                        <span class="inline-block h-2 w-2 rounded-full bg-gold" aria-hidden="true"></span>
+                        Not connected yet
+                    </p>
                 </div>
-                <div>
-                    <h3 class="text-lg font-semibold mb-4 text-amber-200">Quick Links</h3>
-                    <ul class="space-y-2">
-                        <li><a href="{% url 'home' %}" class="text-amber-100 hover:text-white transition duration-300">Home</a></li>
-                        <li><a href="{% url 'product_list' %}" class="text-amber-100 hover:text-white transition duration-300">Products</a></li>
-                    </ul>
+                <button type="button" id="rail-close"
+                        class="rounded p-1 text-crema/60 transition hover:bg-roast hover:text-crema
+                               focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+                        aria-label="Close Basil panel">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </header>
+
+            <div class="flex-1 space-y-4 overflow-y-auto p-4">
+                <div class="rounded-xl rounded-tl-none bg-roast p-3 text-sm leading-relaxed">
+                    <p>Hi! I&rsquo;m Basil, your AI Coffee Concierge.</p>
+                    <p class="mt-2 text-crema/70">
+                        I&rsquo;m still being trained &mdash; until then, here are the useful corners
+                        of the shop.
+                    </p>
                 </div>
-                <div>
-                    <h3 class="text-lg font-semibold mb-4 text-amber-200">Contact</h3>
-                    <p class="text-amber-100">Email: info@coffeeshop.com</p>
-                    <p class="text-amber-100">Phone: (555) 123-4567</p>
+
+                {# Real links, not decorative chips. #}
+                <div class="grid grid-cols-2 gap-2">
+                    <a href="{% url 'product_list' %}" class="btn-ghost justify-start px-3 py-2 text-xs normal-case">
+                        View Menu
+                    </a>
+                    <a href="{% url 'about' %}" class="btn-ghost justify-start px-3 py-2 text-xs normal-case">
+                        Our Story
+                    </a>
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'order_list' %}" class="btn-ghost col-span-2 justify-start px-3 py-2 text-xs normal-case">
+                        Order History
+                    </a>
+                    {% endif %}
                 </div>
             </div>
-            <div class="border-t border-amber-700 mt-8 pt-8 text-center text-amber-200">
-                <p>&copy; 2026 Coffee Shop. All rights reserved.</p>
+
+            <div class="shrink-0 border-t border-gold/20 p-4">
+                <label for="basil-input" class="sr-only">Message Basil</label>
+                <input id="basil-input" type="text" disabled
+                       placeholder="Basil is not connected yet…"
+                       class="field-vintage cursor-not-allowed opacity-50">
+                <p class="mt-3 text-center text-xs text-crema/50">
+                    Basil can make mistakes.<br>Please confirm important details.
+                </p>
+            </div>
+        </aside>
+
+        <!-- Reopen tab, shown only while the rail is closed -->
+        <button type="button" id="rail-open" hidden
+                class="fixed bottom-6 right-6 z-40 rounded-full border border-gold/40 bg-terracotta p-4
+                       shadow-2xl transition hover:bg-terracotta-600
+                       focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+                aria-label="Open Basil panel">
+            <img src="{% static 'icons/basil_avatar.svg' %}" alt="" class="h-6 w-6" aria-hidden="true">
+        </button>
+    </div>
+
+    <!-- ==================== Footer ==================== -->
+    <footer class="mt-16 border-t border-gold/25 bg-espresso-800">
+        <div class="mx-auto max-w-[1600px] px-4 py-10 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+                {% comment %}
+                The mockup's fourth tile reads "Secure payments powered by Stripe".
+                There is no Stripe integration and payments are a v1 non-goal
+                (MASTER_SPEC §1), so it is replaced rather than shown untruthfully.
+                {% endcomment %}
+                <div>
+                    <h3 class="font-display text-sm uppercase tracking-widest2 text-gold">Premium Ingredients</h3>
+                    <p class="mt-2 text-sm text-crema/70">We select the best, so you enjoy the best.</p>
+                </div>
+                <div>
+                    <h3 class="font-display text-sm uppercase tracking-widest2 text-gold">Handmade Daily</h3>
+                    <p class="mt-2 text-sm text-crema/70">Crafted every day by our pastry chefs.</p>
+                </div>
+                <div>
+                    <h3 class="font-display text-sm uppercase tracking-widest2 text-gold">Fast Delivery</h3>
+                    <p class="mt-2 text-sm text-crema/70">Fresh to your door, always on time.</p>
+                </div>
+                <div>
+                    <h3 class="font-display text-sm uppercase tracking-widest2 text-gold">Made For Moments</h3>
+                    <p class="mt-2 text-sm text-crema/70">From your morning cup to life's celebrations.</p>
+                </div>
+            </div>
+
+            <p class="heart-rule" aria-hidden="true">&#10086;</p>
+
+            <div class="flex flex-col items-center justify-between gap-3 border-t border-gold/20 pt-6 sm:flex-row">
+                <p class="text-sm text-crema/60">&copy; 2026 Maison Roast. All rights reserved.</p>
+                <p class="text-sm text-crema/60">info@maisonroast.com &middot; (555) 123-4567</p>
             </div>
         </div>
     </footer>
+
+    <script type="module" src="{% static 'js/main.js' %}"></script>
+    <script type="module" src="{% static 'js/basil-panel.js' %}"></script>
+    {% block scripts %}{% endblock %}
 </body>
 </html>

@@ -44,6 +44,86 @@ class ProductListViewTestCase(TestCase):
         self.assertContains(response, self.product.name)
 
 
+class AboutViewTestCase(TestCase):
+    def test_about_page_renders(self):
+        response = self.client.get(reverse("about"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "products/about.html")
+        self.assertContains(response, "brewed with passion")
+
+    def test_about_is_public(self):
+        """No login wall on the story page."""
+        self.assertEqual(self.client.get(reverse("about")).status_code, 200)
+
+
+class HomeViewTestCase(TestCase):
+    def setUp(self):
+        self.available = Product.objects.create(
+            name="Featured Latte", description="d", price=3.50, stock=5, category="Latte",
+        )
+        self.hidden = Product.objects.create(
+            name="Discontinued Brew", description="d", price=9.99, stock=5,
+            category="Latte", available=False,
+        )
+
+    def test_home_lists_only_available_featured_products(self):
+        response = self.client.get(reverse("home"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Featured Latte")
+        # The strip links straight to Buy Now, so it must not offer the unbuyable.
+        self.assertNotContains(response, "Discontinued Brew")
+
+    def test_category_tiles_come_from_the_catalog(self):
+        response = self.client.get(reverse("home"))
+        self.assertIn("Latte", response.context["categories"])
+
+
+class ProductListFilterTestCase(TestCase):
+    def setUp(self):
+        Product.objects.create(name="Hot One", description="d", price=1, stock=1,
+                               category="Hot Coffee")
+        Product.objects.create(name="Cold One", description="d", price=1, stock=1,
+                               category="Cold Coffee")
+
+    def test_category_filter_narrows_the_menu(self):
+        response = self.client.get(reverse("product_list"), {"category": "Hot Coffee"})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Hot One")
+        self.assertNotContains(response, "Cold One")
+
+    def test_no_filter_shows_everything(self):
+        response = self.client.get(reverse("product_list"))
+        self.assertContains(response, "Hot One")
+        self.assertContains(response, "Cold One")
+
+    def test_unknown_category_is_not_an_error(self):
+        response = self.client.get(reverse("product_list"), {"category": "Nope"})
+        self.assertEqual(response.status_code, 200)
+
+    def test_pagination_links_keep_the_category(self):
+        """A bare ?page=2 would silently drop the filter and dump the visitor
+        back into the full menu."""
+        for i in range(12):  # paginate_by = 9, so this spans two pages
+            Product.objects.create(name=f"Hot {i}", description="d", price=1,
+                                   stock=1, category="Hot Coffee")
+
+        response = self.client.get(reverse("product_list"), {"category": "Hot Coffee"})
+        self.assertTrue(response.context["is_paginated"])
+        # Django's urlencode filter emits %20 for the space, not +. Both are
+        # valid; what matters is that the category rides along.
+        self.assertContains(response, "page=2&amp;category=Hot%20Coffee")
+
+    def test_second_page_still_filtered(self):
+        for i in range(12):
+            Product.objects.create(name=f"Hot {i}", description="d", price=1,
+                                   stock=1, category="Hot Coffee")
+
+        response = self.client.get(reverse("product_list"),
+                                   {"category": "Hot Coffee", "page": 2})
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Cold One")
+
+
 class ProductSlugTestCase(TestCase):
     def test_duplicate_names_get_distinct_slugs(self):
         """Two products sharing a name must not collide on the unique slug."""
@@ -148,4 +228,72 @@ class ProductAddViewPermissionTestCase(TestCase):
     def test_staff_can_open_the_form(self):
         self.client.force_login(self.staff)
         response = self.client.get(self.url)
-        self.assertEqual(response.status_code, 200)    
+        self.assertEqual(response.status_code, 200)
+
+    def test_staff_can_create_a_product(self):
+        """The ModelForm conversion must not break the actual save path."""
+        self.client.force_login(self.staff)
+        response = self.client.post(self.url, {
+            "name": "Flat White",
+            "description": "Silky and strong",
+            "price": "4.50",
+            "stock": 12,
+            "available": "on",
+            "product_image": "https://example.com/flat-white.jpg",
+            "category": "Latte",
+        })
+
+        self.assertEqual(response.status_code, 302)
+        product = Product.objects.get(name="Flat White")
+        self.assertEqual(str(product.price), "4.50")
+        self.assertEqual(product.stock, 12)
+        self.assertTrue(product.available)
+        # slug is excluded from the form and generated by Product.save()
+        self.assertEqual(product.slug, "flat-white")
+
+    def test_negative_price_is_rejected(self):
+        """clean_price must survive the Form -> ModelForm conversion."""
+        self.client.force_login(self.staff)
+        response = self.client.post(self.url, {
+            "name": "Free Coffee",
+            "description": "Suspicious",
+            "price": "-1.00",
+            "stock": 1,
+            "category": "Latte",
+        })
+
+        self.assertEqual(response.status_code, 200)  # re-rendered, not saved
+        self.assertFalse(Product.objects.filter(name="Free Coffee").exists())
+        self.assertIn("price", response.context["form"].errors)
+
+    def test_invalid_submission_shows_errors_and_keeps_input(self):
+        """The old template rendered no errors at all -- a bad submission came
+        back blank with no explanation (Refactor_backend.md #15)."""
+        self.client.force_login(self.staff)
+        response = self.client.post(self.url, {
+            "name": "Free Coffee",
+            "description": "Suspicious",
+            "price": "-1.00",
+            "stock": 7,
+            "category": "Latte",
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Price cannot be negative")
+        # the staff member's typing must survive the round trip
+        self.assertContains(response, 'value="Free Coffee"')
+        self.assertContains(response, 'value="7"')
+
+    def test_unchecked_available_saves_as_false(self):
+        """The template posts `available` only when the box is ticked."""
+        self.client.force_login(self.staff)
+        self.client.post(self.url, {
+            "name": "Seasonal Blend",
+            "description": "Not on sale yet",
+            "price": "6.00",
+            "stock": 3,
+            "category": "Espresso",
+        })
+
+        product = Product.objects.get(name="Seasonal Blend")
+        self.assertFalse(product.available)    

@@ -210,6 +210,8 @@ notes.txt
 node_modules/
 staticfiles/
 static/css/main.css
+# Font binaries copied out of node_modules by `npm run build` (npm run fonts).
+static/css/files/
 backups
 node_modules/
 # Trained CNN weights. Too large for git (81 MB); published on Hugging Face

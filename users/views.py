@@ -1,6 +1,8 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import logout, login
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
+from django.views.generic import TemplateView
 from django.contrib import messages
 from .forms import CustomUserCreationForm
 
@@ -49,3 +51,13 @@ class RegisterView(View):
             return redirect('home')
         
         return render(request, 'users/register.html', {'form': form})
+
+
+class ProfileView(LoginRequiredMixin, TemplateView):
+    """The account page.
+
+    Renders the shell only -- every read and write goes through /api/users/me/
+    via static/js/profile.js, so the page exercises real GET/PUT/PATCH/DELETE.
+    """
+
+    template_name = 'users/profile.html'

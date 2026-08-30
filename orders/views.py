@@ -12,14 +12,24 @@ import uuid
 from datetime import datetime
 
 # Create your views here.
-class MYOrderslist(LoginRequiredMixin, ListView):
+class MyOrderList(LoginRequiredMixin, ListView):
     model = Order
     template_name = 'orders/order_list.html'
     context_object_name = 'orders'
     
     def get_queryset(self):
-        """Return orders for the current user that are active, newest first."""
-        return Order.objects.filter(is_active=True, user=self.request.user).order_by('-created_at')
+        """Return orders for the current user that are active, newest first.
+
+        Prefetches the line items because order_list.html now shows each order's
+        item count and total (Order.total sums the lines). Without this the list
+        costs a query per row.
+        """
+        return (
+            Order.objects
+            .filter(is_active=True, user=self.request.user)
+            .prefetch_related('product_orders__product')
+            .order_by('-created_at')
+        )
 
 
 class OrderDetail(LoginRequiredMixin, DetailView):
@@ -30,7 +40,14 @@ class OrderDetail(LoginRequiredMixin, DetailView):
     
     def get_queryset(self):
         """Limit detail view to active orders that belong to the requesting user."""
-        return Order.objects.filter(is_active=True, user=self.request.user)
+        # order_detail.html walks order.product_orders.all three times and reads
+        # the product FK on every row, so without prefetching the page costs
+        # one query per line item.
+        return (
+            Order.objects
+            .filter(is_active=True, user=self.request.user)
+            .prefetch_related('product_orders__product')
+        )
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -50,7 +67,7 @@ class CreateOrderProductView(LoginRequiredMixin, View):
 
             # Pre-fill form with product data
             form = ProductOrderForm(initial={
-                'product_name': product.id,
+                'product': product.id,
                 'quantity': 1
             })
 
@@ -71,7 +88,7 @@ class CreateOrderProductView(LoginRequiredMixin, View):
 
         if form.is_valid():
             quantity = form.cleaned_data['quantity']
-            product = form.cleaned_data['product_name']
+            product = form.cleaned_data['product']
             product_id = product.pk
 
             # An order is a record we may need to act on -- a receipt, a refund,
@@ -140,7 +157,7 @@ class CreateOrderProductView(LoginRequiredMixin, View):
                 # repriced later.
                 ProductOrder.objects.create(
                     order=order,
-                    product_name=product,
+                    product=product,
                     quantity=quantity,
                     price_per_item=product.price
                 )
@@ -160,7 +177,7 @@ class CreateOrderProductView(LoginRequiredMixin, View):
 
         else:
             # Form is invalid - re-render with errors
-            product_id = request.POST.get('product_name')
+            product_id = request.POST.get('product')
             product = None
             if product_id:
                 try:

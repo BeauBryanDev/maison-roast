@@ -12,3 +12,5 @@ class ProductAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     date_hierarchy = 'created_at'
     ordering = ['-created_at']
+    # auto_now_add / auto_now: any posted value is discarded, so don't offer a widget.
+    readonly_fields = ['created_at', 'updated_at']

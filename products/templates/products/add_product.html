@@ -1,65 +1,116 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Add Product {% endblock %}
+{% block title %}Add Product — Maison Roast{% endblock %}
 
 {% block content %}
+<div class="fade-in mx-auto max-w-3xl">
 
-<form  Action="{% url 'product_add' %}" method="post" enctype="multipart/form-data" class="max-w-3xl mx-auto">
-    {% csrf_token %}
-    <div class="fade-in max-w-3xl mx-auto bg-white p-8 rounded-3xl shadow-2xl">
-        <h1 class="text-4xl font-bold text-gray-800 mb-6">Add New Product</h1>
+    <header class="text-center">
+        <p class="filigree text-gold">Add Product</p>
+        <p class="mt-4 text-sm text-crema/70">Staff only. New items appear on the menu immediately.</p>
+    </header>
 
-        <!-- Product Name -->
-        <div class="mb-6">
-            <label for="name" class="block text-gray-700 font-semibold mb-2">Product Name</label>
-            <input type="text" id="name" name="name" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500" required>
+    <form method="post" action="{% url 'product_add' %}" class="panel-cream paper mt-8 p-8">
+        {% csrf_token %}
+
+        {% comment %}
+        The previous version of this template rendered no errors at all, so an
+        invalid submission returned a blank form with no explanation and the
+        staff member's input lost (Refactor_backend.md #15). Errors are shown now,
+        and every field is repopulated from form.<field>.value.
+        {% endcomment %}
+        {% if form.errors %}
+        <div class="mb-6 rounded-lg border-l-4 border-red-700 bg-red-100 p-4 text-sm text-red-900">
+            <p class="font-semibold">This product was not saved:</p>
+            <ul class="mt-2 list-inside list-disc space-y-1">
+                {% for field in form %}
+                    {% for error in field.errors %}
+                    <li>{{ field.label }}: {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div class="sm:col-span-2">
+                <label for="name" class="mb-2 block font-display text-sm uppercase tracking-widest text-roast/70">
+                    Product Name <span class="text-terracotta">*</span>
+                </label>
+                <input type="text" id="name" name="name" required class="field-cream"
+                       value="{{ form.name.value|default:'' }}" placeholder="Flat White">
+            </div>
+
+            <div class="sm:col-span-2">
+                <label for="description" class="mb-2 block font-display text-sm uppercase tracking-widest text-roast/70">
+                    Description <span class="text-terracotta">*</span>
+                </label>
+                <textarea id="description" name="description" rows="4" required class="field-cream"
+                          placeholder="Silky, strong, and served warm.">{{ form.description.value|default:'' }}</textarea>
+            </div>
+
+            <div>
+                <label for="price" class="mb-2 block font-display text-sm uppercase tracking-widest text-roast/70">
+                    Price ($) <span class="text-terracotta">*</span>
+                </label>
+                <input type="number" step="0.01" min="0" id="price" name="price" required class="field-cream"
+                       value="{{ form.price.value|default:'' }}" placeholder="4.50">
+            </div>
+
+            <div>
+                <label for="stock" class="mb-2 block font-display text-sm uppercase tracking-widest text-roast/70">
+                    Stock <span class="text-terracotta">*</span>
+                </label>
+                <input type="number" min="0" id="stock" name="stock" required class="field-cream"
+                       value="{{ form.stock.value|default:'' }}" placeholder="12">
+            </div>
+
+            <div class="sm:col-span-2">
+                <label for="category" class="mb-2 block font-display text-sm uppercase tracking-widest text-roast/70">
+                    Category <span class="text-terracotta">*</span>
+                </label>
+                <input type="text" id="category" name="category" required class="field-cream"
+                       list="category-options" value="{{ form.category.value|default:'' }}"
+                       placeholder="Hot Coffee">
+                {# Free-text CharField, not a FK -- the datalist just suggests existing values. #}
+                <datalist id="category-options">
+                    {% for category in categories %}<option value="{{ category }}"></option>{% endfor %}
+                </datalist>
+            </div>
+
+            <div class="sm:col-span-2">
+                <label for="product_image" class="mb-2 block font-display text-sm uppercase tracking-widest text-roast/70">
+                    Image URL
+                </label>
+                <input type="url" id="product_image" name="product_image" class="field-cream"
+                       value="{{ form.product_image.value|default:'' }}"
+                       placeholder="https://example.com/flat-white.jpg">
+                <p class="mt-2 text-xs text-roast/60">Optional. Cards fall back to an icon if this is empty or broken.</p>
+            </div>
+
+            <div class="sm:col-span-2">
+                <label class="flex items-center gap-3">
+                    <input type="checkbox" id="available" name="available"
+                           {% if form.available.value|default_if_none:True %}checked{% endif %}
+                           class="h-5 w-5 rounded border-gold/60 text-terracotta focus:ring-terracotta">
+                    <span class="font-display text-sm uppercase tracking-widest text-roast/70">
+                        Available on the menu
+                    </span>
+                </label>
+            </div>
         </div>
 
-        <!-- Description -->
-        <div class="mb-6">
-            <label for="description" class="block text-gray-700 font-semibold mb-2">Description</label>
-            <textarea id="description" name="description" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500" required></textarea>
+        <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-end">
+            <a href="{% url 'product_list' %}"
+               class="inline-flex items-center justify-center rounded-full border border-roast/40 px-8 py-3 font-body uppercase tracking-wider text-roast transition hover:border-roast hover:bg-roast/5">
+                Cancel
+            </a>
+            <button type="submit" class="btn-terracotta">Add Product</button>
         </div>
-        <!-- Price -->
-        <div class="mb-6">
-            <label for="price" class="block text-gray-700 font-semibold mb-2">Price ($)</label>
-            <input type="number" step="0.01" id="price" name="price" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500" required>  
-        </div>
-        <!-- Stock -->
-        <div class="mb-6">
-            <label for="stock" class="block text-gray-700 font-semibold mb-2">Stock Quantity</label>
-            <input type="number" id="stock" name="stock" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500" required>
-        </div>      
-        <!-- available -->
-        <div class="mb-6">
-            <label for="available" class="block text-gray-700 font-semibold mb-2">Available</label>
-            <input type="checkbox" id="available" name="available" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500">
-        </div>
-        <!-- url image from web-->
-        <div class="mb-6">
-            <label for="product_image" class="block text-gray-700 font-semibold mb-2">Image URL</label>
-            <input type="url" id="product_image" name="product_image" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500" required>
-        </div>
-        <!-- Category -->
-        <div class="mb-8">
-            <label for="category" class="block text-gray-700 font-semibold mb-2">Category</label>
-            <select id="category" name="category" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500" required>
-                <option value="" disabled selected>Select a category</option>
-                <option value="Espresso">Espresso</option>
-                <option value="Latte">Latte</option>
-                <option value="Cappuccino">Cappuccino</option>
-                <option value="Tea">Tea</option>
-                <option value="Pastry">Pastry</option>
-            </select>
-        </div> 
-        <!-- Submit Button -->
-        <div class="flex justify-end">
-            <button type="submit" class="bg-gradient-to-r from-amber-700 to-orange-800 text-white py-4 px-8 rounded-xl font-semibold text-lg hover:from-amber-800 hover:to-orange-900 transform hover:scale-105 transition duration-300 shadow-lg">
-                Add Product
-            </button>   
-        </div>
-    </div>
-</form>  
-
-{% endblock %}  
-    
+    </form>
+</div>
+{% endblock %}

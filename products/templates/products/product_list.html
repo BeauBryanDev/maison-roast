@@ -1,108 +1,156 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Products - Coffee Shop{% endblock %}
+{% block title %}Menu — Maison Roast{% endblock %}
 
 {% block content %}
 <div class="fade-in">
-    <!-- Page Header -->
-    <div class="mb-8">
-        <h1 class="text-4xl font-bold text-gray-800 mb-2">Our Products</h1>
-        <p class="text-gray-600">Discover our premium coffee selection</p>
-    </div>
 
-    <!-- Products Grid -->
+    <!-- ==================== Header ==================== -->
+    <header class="text-center">
+        <p class="filigree text-gold">Our Menu</p>
+        <p class="mx-auto mt-4 max-w-xl text-crema/75">
+            Artisan coffee and pastries, made with heart and tradition.
+        </p>
+    </header>
+
+    <!-- ==================== Category filter ==================== -->
+    {% if categories %}
+    <nav class="mt-8 flex flex-wrap justify-center gap-2" aria-label="Filter by category">
+        <a href="{% url 'product_list' %}"
+           class="rounded-full border px-4 py-2 text-xs uppercase tracking-wider transition
+                  {% if not active_category %}border-terracotta bg-terracotta text-crema-200{% else %}border-gold/40 text-crema/80 hover:border-gold hover:text-gold-400{% endif %}">
+            All
+        </a>
+        {% for category in categories %}
+        <a href="?category={{ category|urlencode }}"
+           class="rounded-full border px-4 py-2 text-xs uppercase tracking-wider transition
+                  {% if active_category == category %}border-terracotta bg-terracotta text-crema-200{% else %}border-gold/40 text-crema/80 hover:border-gold hover:text-gold-400{% endif %}">
+            {{ category }}
+        </a>
+        {% endfor %}
+    </nav>
+    {% endif %}
+
+    <!-- ==================== Grid ==================== -->
     {% if products %}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+    <div class="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {% for product in products %}
-        <div class="bg-white rounded-2xl shadow-lg overflow-hidden transform hover:scale-105 transition duration-300 hover:shadow-2xl">
-            <!-- Product Image -->
-            <div class="h-64 bg-gradient-to-br from-amber-200 to-orange-300 relative overflow-hidden">
+        <article class="panel-dark reveal flex flex-col overflow-hidden transition hover:-translate-y-1">
+
+            <div class="img-frame">
+                {# TODO: swap product.product_image (external URL) for a local static image. #}
                 {% if product.product_image %}
-                    <img src="{{ product.product_image }}" alt="{{ product.name }} Caffee" class="w-64 h-64 object-cover">
-                {% else %}
-                    <div class="w-full h-full flex items-center justify-center">
-                        <svg class="w-32 h-32 text-amber-700 opacity-50" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/>
-                        </svg>
-                    </div>
+                <img src="{{ product.product_image }}" alt="{{ product.name }}"
+                     loading="lazy" data-fallback>
                 {% endif %}
+                <span class="img-fallback" {% if product.product_image %}hidden{% endif %}>
+                    <img src="{% static 'icons/coffee_pot.svg' %}" alt="" class="h-20 w-20" aria-hidden="true">
+                </span>
 
-                <!-- Category Badge -->
-                <div class="absolute top-4 right-4">
-                    <span class="bg-amber-800 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                        {{ product.category }}
-                    </span>
-                </div>
+                <span class="absolute right-3 top-3 rounded-full bg-espresso/85 px-3 py-1 text-xs uppercase tracking-wider text-gold">
+                    {{ product.category }}
+                </span>
 
-                <!-- Availability Badge -->
+                {% comment %}
+                Unavailable products stay on the shelf with a badge rather than being
+                filtered out -- the server refuses the purchase either way.
+                See Refactor_backend.md #11.
+                {% endcomment %}
                 {% if not product.available %}
-                <div class="absolute top-4 left-4">
-                    <span class="bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                        Out of Stock
-                    </span>
-                </div>
+                <span class="absolute left-3 top-3 rounded-full bg-red-800/90 px-3 py-1 text-xs uppercase tracking-wider text-crema">
+                    Out of Stock
+                </span>
                 {% elif product.stock < 5 %}
-                <div class="absolute top-4 left-4">
-                    <span class="bg-orange-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                        Low Stock
-                    </span>
-                </div>
+                <span class="absolute left-3 top-3 rounded-full bg-terracotta/90 px-3 py-1 text-xs uppercase tracking-wider text-crema">
+                    Low Stock
+                </span>
                 {% endif %}
             </div>
 
-            <!-- Product Info -->
-            <div class="p-6">
-                <h3 class="text-xl font-bold text-gray-800 mb-2">{{ product.name }}</h3>
-                <p class="text-gray-600 mb-4 line-clamp-2">{{ product.description }}</p>
+            <div class="flex flex-1 flex-col p-5">
+                <h2 class="font-display text-xl font-bold text-crema">
+                    <a href="{% url 'product_detail' product.slug %}" class="transition hover:text-gold-400">
+                        {{ product.name }}
+                    </a>
+                </h2>
 
-                <div class="flex items-center justify-between mb-4">
-                    <span class="text-3xl font-bold text-amber-800">${{ product.price }}</span>
-                    <span class="text-sm text-gray-500">Stock: {{ product.stock }}</span>
+                <p class="mt-2 line-clamp-2 text-sm leading-relaxed text-crema/70">
+                    {{ product.description }}
+                </p>
+
+                <div class="mt-4 flex items-baseline justify-between">
+                    <span class="font-display text-2xl text-terracotta-400">${{ product.price }}</span>
+                    <span class="text-xs uppercase tracking-wider text-crema/50">
+                        {{ product.stock }} in stock
+                    </span>
                 </div>
 
-                <a href="{% url 'product_detail' product.slug %}" class="block w-full bg-gradient-to-r from-amber-700 to-orange-800 text-white text-center py-3 rounded-lg font-semibold hover:from-amber-800 hover:to-orange-900 transition duration-300  border-2 border-orange-800 hover:border-white shadow-lg">
-                    View Details
-                </a>
+                <div class="mt-5 flex gap-2">
+                    <a href="{% url 'product_detail' product.slug %}" class="btn-ghost flex-1 text-xs">
+                        Details
+                    </a>
+                    {% if product.available and product.stock > 0 %}
+                    <a href="{% url 'add_product_order' %}?product_id={{ product.id }}"
+                       class="btn-terracotta flex-1 px-4 py-2 text-xs">
+                        Buy Now
+                    </a>
+                    {% else %}
+                    <span class="inline-flex flex-1 items-center justify-center rounded-full bg-roast-600 px-4 py-2 text-xs uppercase tracking-wider text-crema/50">
+                        Unavailable
+                    </span>
+                    {% endif %}
+                </div>
             </div>
-        </div>
+        </article>
         {% endfor %}
     </div>
 
-    <!-- Pagination -->
+    <!-- ==================== Pagination ==================== -->
+    {% comment %}
+    Every link carries the active category forward. A bare ?page=2 would silently
+    drop the filter and drop the visitor back into the full menu.
+    {% endcomment %}
     {% if is_paginated %}
-    <div class="flex justify-center items-center space-x-4">
+    <nav class="mt-12 flex flex-wrap items-center justify-center gap-3" aria-label="Pagination">
         {% if page_obj.has_previous %}
-        <a href="?page=1" class="px-4 py-2 bg-white rounded-lg shadow hover:shadow-md transition duration-300">
-            First
-        </a>
-        <a href="?page={{ page_obj.previous_page_number }}" class="px-4 py-2 bg-white rounded-lg shadow hover:shadow-md transition duration-300">
-            Previous
-        </a>
+        <a href="?page=1{% if active_category %}&amp;category={{ active_category|urlencode }}{% endif %}"
+           class="btn-ghost text-xs">First</a>
+        <a href="?page={{ page_obj.previous_page_number }}{% if active_category %}&amp;category={{ active_category|urlencode }}{% endif %}"
+           class="btn-ghost text-xs">Previous</a>
         {% endif %}
 
-        <span class="px-6 py-2 bg-amber-700 text-white rounded-lg font-semibold">
+        <span class="rounded-full bg-roast px-5 py-2 font-display text-sm text-crema">
             Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
         </span>
 
         {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}" class="px-4 py-2 bg-white rounded-lg shadow hover:shadow-md transition duration-300">
-            Next
-        </a>
-        <a href="?page={{ page_obj.paginator.num_pages }}" class="px-4 py-2 bg-white rounded-lg shadow hover:shadow-md transition duration-300">
-            Last
-        </a>
+        <a href="?page={{ page_obj.next_page_number }}{% if active_category %}&amp;category={{ active_category|urlencode }}{% endif %}"
+           class="btn-ghost text-xs">Next</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}{% if active_category %}&amp;category={{ active_category|urlencode }}{% endif %}"
+           class="btn-ghost text-xs">Last</a>
         {% endif %}
-    </div>
+    </nav>
     {% endif %}
 
     {% else %}
-    <!-- Empty State -->
-    <div class="bg-white rounded-2xl shadow-lg p-16 text-center">
-        <svg class="w-24 h-24 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
-        </svg>
-        <h2 class="text-2xl font-bold text-gray-800 mb-2">No Products Available</h2>
-        <p class="text-gray-600">Check back soon for our latest offerings!</p>
+    <!-- ==================== Empty state ==================== -->
+    <div class="panel-cream paper mt-10 px-6 py-16 text-center">
+        <img src="{% static 'icons/coffee_pot.svg' %}" alt=""
+             class="mx-auto h-20 w-20 opacity-40" aria-hidden="true">
+        <h2 class="mt-6 font-display text-2xl font-bold text-espresso">
+            {% if active_category %}Nothing in “{{ active_category }}” just yet{% else %}Our menu is being prepared{% endif %}
+        </h2>
+        <p class="mt-2 text-roast">
+            {% if active_category %}
+                Try another corner of the menu.
+            {% else %}
+                Please check back shortly for our latest offerings.
+            {% endif %}
+        </p>
+        {% if active_category %}
+        <a href="{% url 'product_list' %}" class="btn-terracotta mt-8">See the full menu</a>
+        {% endif %}
     </div>
     {% endif %}
 </div>

@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.db import models
 from django.conf import settings
 
@@ -22,6 +24,22 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
+    @property
+    def total(self):
+        """Sum of the line items.
+
+        Templates cannot sum across a loop -- the previous order detail page
+        used {% widthratio %}, which returns an integer, so $2.99 x 2 rendered
+        as "$6" instead of $5.98. Money arithmetic belongs here, in Decimal.
+
+        Uses the prefetch cache when the queryset prefetched product_orders
+        (OrderDetail.get_queryset does).
+        """
+        return sum(
+            (line.subtotal for line in self.product_orders.all()),
+            Decimal('0.00'),
+        )
+
     def __str__(self) -> str:
         return f"Order {self.order_number} -{self.is_active} by {self.customer_name}" 
     
@@ -29,9 +47,14 @@ class Order(models.Model):
 class ProductOrder(models.Model):
     
     order = models.ForeignKey(Order, related_name='product_orders', on_delete=models.CASCADE)
-    product_name = models.ForeignKey('products.Product', on_delete=models.CASCADE)
+    product = models.ForeignKey('products.Product', on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField()
     price_per_item = models.DecimalField(max_digits=10, decimal_places=2)
     
+    @property
+    def subtotal(self):
+        """price_per_item * quantity, in Decimal -- never rounded for display."""
+        return self.price_per_item * self.quantity
+
     def __str__(self) -> str:
-        return f"{self.quantity} x {self.product_name} for Order {self.order.order_number}"
+        return f"{self.quantity} x {self.product} for Order {self.order.order_number}"

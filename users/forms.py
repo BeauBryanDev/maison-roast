@@ -9,7 +9,7 @@ class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(
         required=True,
         widget=forms.EmailInput(attrs={
-            'class': 'w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-amber-700 transition duration-300 bg-amber-50',
+            'class': 'field-cream',
             'placeholder': 'Enter your email address'
         })
     )
@@ -18,7 +18,7 @@ class CustomUserCreationForm(UserCreationForm):
         max_length=32,
         required=False,
         widget=forms.TextInput(attrs={
-            'class': 'w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-amber-700 transition duration-300 bg-amber-50',
+            'class': 'field-cream',
             'placeholder': 'Enter your first name'
         })
     )
@@ -27,7 +27,7 @@ class CustomUserCreationForm(UserCreationForm):
         max_length=32,
         required=False,
         widget=forms.TextInput(attrs={
-            'class': 'w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-amber-700 transition duration-300 bg-amber-50',
+            'class': 'field-cream',
             'placeholder': 'Enter your last name'
         })
     )
@@ -36,7 +36,7 @@ class CustomUserCreationForm(UserCreationForm):
         max_length=16,
         required=False,
         widget=forms.TextInput(attrs={
-            'class': 'w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-amber-700 transition duration-300 bg-amber-50',
+            'class': 'field-cream',
             'placeholder': 'Enter your phone number'
         })
     )
@@ -45,7 +45,7 @@ class CustomUserCreationForm(UserCreationForm):
         max_length=255,
         required=False,
         widget=forms.Textarea(attrs={
-            'class': 'w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-amber-700 transition duration-300 bg-amber-50',
+            'class': 'field-cream',
             'placeholder': 'Enter your address',
             'rows': 3
         })
@@ -56,7 +56,7 @@ class CustomUserCreationForm(UserCreationForm):
         fields = ('username', 'email', 'first_name', 'last_name', 'phone_number', 'address', 'password1', 'password2')
         widgets = {
             'username': forms.TextInput(attrs={
-                'class': 'w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-amber-700 transition duration-300 bg-amber-50',
+                'class': 'field-cream',
                 'placeholder': 'Choose a username'
             }),
         }
@@ -64,11 +64,11 @@ class CustomUserCreationForm(UserCreationForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['password1'].widget.attrs.update({
-            'class': 'w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-amber-700 transition duration-300 bg-amber-50',
+            'class': 'field-cream',
             'placeholder': 'Create a password'
         })
         self.fields['password2'].widget.attrs.update({
-            'class': 'w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-amber-700 transition duration-300 bg-amber-50',
+            'class': 'field-cream',
             'placeholder': 'Confirm your password'
         })
 

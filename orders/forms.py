@@ -14,7 +14,7 @@ class ProductOrderForm(ModelForm):
     # the Product row in the view, so it cannot be tampered with in the POST.
     class Meta:
         model = ProductOrder
-        fields = ['product_name', 'quantity']
+        fields = ['product', 'quantity']
 
     def clean_quantity(self):
         # PositiveIntegerField permits 0, which would create an order for nothing.

@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}About Us — Maison Roast{% endblock %}
+
+{% block content %}
+
+<!-- ==================== Hero ==================== -->
+<section class="reveal relative overflow-hidden rounded-3xl border border-gold/25">
+    <img src="{% static 'images/brown_vintage.jpg' %}" alt=""
+         class="absolute inset-0 h-full w-full object-cover opacity-40" aria-hidden="true">
+    <div class="absolute inset-0 bg-gradient-to-r from-espresso via-espresso/85 to-espresso/60" aria-hidden="true"></div>
+
+    <div class="relative px-6 py-16 text-center sm:px-10 lg:py-24">
+        <p class="filigree text-sm text-terracotta-400">About Us</p>
+
+        <h1 class="mt-6 font-display text-4xl font-bold leading-tight text-crema sm:text-5xl">
+            Our story is
+        </h1>
+        <p class="font-script text-4xl text-gold-400 sm:text-5xl">
+            brewed with passion <span class="text-terracotta-400" aria-hidden="true">&#9825;</span>
+        </p>
+
+        <p class="mx-auto mt-8 max-w-2xl text-base leading-relaxed text-crema/85 sm:text-lg">
+            Maison Roast is more than a coffee shop. It&rsquo;s a place where tradition meets
+            creativity, and every cup and every pastry is made with love.
+        </p>
+    </div>
+</section>
+
+<!-- ==================== Who / What / Mission ==================== -->
+<section class="reveal panel-cream paper mt-10 px-6 py-12 sm:px-10">
+    <div class="grid grid-cols-1 gap-10 md:grid-cols-3 md:gap-8">
+
+        <article class="text-center md:border-r md:border-gold/30 md:pr-8">
+            <img src="{% static 'icons/coffee_cup2.svg' %}" alt=""
+                 class="mx-auto h-14 w-14" aria-hidden="true">
+            <h2 class="mt-4 font-display text-xl font-bold uppercase tracking-widest text-espresso">
+                Who We Are
+            </h2>
+            <p class="heart-rule text-terracotta" aria-hidden="true">&#9825;</p>
+            <p class="text-sm leading-relaxed text-roast">
+                We are a boutique coffee shop and patisserie located in the heart of the city.
+                We believe that great coffee and exquisite pastries create meaningful moments.
+                Whether you&rsquo;re here for your daily espresso or a special celebration,
+                we&rsquo;re honored to be part of your day.
+            </p>
+        </article>
+
+        <article class="text-center md:border-r md:border-gold/30 md:px-8">
+            <img src="{% static 'icons/petit_cake.svg' %}" alt=""
+                 class="mx-auto h-14 w-14" aria-hidden="true">
+            <h2 class="mt-4 font-display text-xl font-bold uppercase tracking-widest text-espresso">
+                What We Do
+            </h2>
+            <p class="heart-rule text-terracotta" aria-hidden="true">&#9825;</p>
+            <p class="text-sm leading-relaxed text-roast">
+                We craft specialty coffee using premium beans sourced from the best coffee
+                regions. Our pastries and desserts are handmade daily with high-quality
+                ingredients. We also create custom cakes and desserts tailored to your vision,
+                for any occasion.
+            </p>
+        </article>
+
+        <article class="text-center md:pl-8">
+            <img src="{% static 'icons/croissant.svg' %}" alt=""
+                 class="mx-auto h-14 w-14" aria-hidden="true">
+            <h2 class="mt-4 font-display text-xl font-bold uppercase tracking-widest text-espresso">
+                Our Mission
+            </h2>
+            <p class="heart-rule text-terracotta" aria-hidden="true">&#9825;</p>
+            <p class="text-sm leading-relaxed text-roast">
+                To deliver exceptional experiences through handcrafted coffee, artisanal
+                pastries, and heartfelt service. We strive to inspire joy, one cup and one
+                bite at a time.
+            </p>
+        </article>
+    </div>
+</section>
+
+<!-- ==================== Values + closing band ==================== -->
+<section class="reveal mt-10 grid grid-cols-1 gap-6 lg:grid-cols-3">
+
+    <div class="panel-dark p-8 lg:col-span-2">
+        <p class="filigree text-lg text-gold">Our Values</p>
+
+        <div class="mt-8 grid grid-cols-2 gap-6 sm:grid-cols-4">
+            <div class="text-center">
+                <img src="{% static 'icons/hot_drink.svg' %}" alt="" class="mx-auto h-10 w-10" aria-hidden="true">
+                <h3 class="mt-3 font-display text-sm uppercase tracking-widest text-crema">Quality</h3>
+                <p class="mt-2 text-xs leading-relaxed text-crema/65">
+                    We never compromise on quality, from our beans to our ingredients.
+                </p>
+            </div>
+            <div class="text-center">
+                <img src="{% static 'icons/capuccino.svg' %}" alt="" class="mx-auto h-10 w-10" aria-hidden="true">
+                <h3 class="mt-3 font-display text-sm uppercase tracking-widest text-crema">Passion</h3>
+                <p class="mt-2 text-xs leading-relaxed text-crema/65">
+                    We love what we do, and it shows in every detail.
+                </p>
+            </div>
+            <div class="text-center">
+                <img src="{% static 'icons/cake.svg' %}" alt="" class="mx-auto h-10 w-10" aria-hidden="true">
+                <h3 class="mt-3 font-display text-sm uppercase tracking-widest text-crema">Craftsmanship</h3>
+                <p class="mt-2 text-xs leading-relaxed text-crema/65">
+                    Handmade, in-house, with care, skill and tradition.
+                </p>
+            </div>
+            <div class="text-center">
+                <img src="{% static 'icons/bistrot.svg' %}" alt="" class="mx-auto h-10 w-10" aria-hidden="true">
+                <h3 class="mt-3 font-display text-sm uppercase tracking-widest text-crema">Community</h3>
+                <p class="mt-2 text-xs leading-relaxed text-crema/65">
+                    We&rsquo;re here to create connections and sweet memories.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel-dark relative overflow-hidden p-8">
+        <img src="{% static 'images/cozy-coffee-spot-stockcake.jpg' %}" alt=""
+             class="absolute inset-0 h-full w-full object-cover opacity-25" aria-hidden="true">
+        <div class="relative flex h-full flex-col justify-center text-center">
+            <p class="font-script text-3xl leading-tight text-gold-400">
+                Made for moments<br>that matter
+            </p>
+            <p class="mt-5 text-sm leading-relaxed text-crema/85">
+                From your morning coffee to life&rsquo;s sweetest celebrations,
+                we&rsquo;re here for every moment.
+            </p>
+            <p class="heart-rule" aria-hidden="true">&#9825;</p>
+        </div>
+    </div>
+</section>
+
+<p class="mt-10 text-center font-script text-2xl text-gold-400">
+    Thank you for being part of our story.
+</p>
+
+{% endblock %}

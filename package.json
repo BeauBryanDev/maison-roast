@@ -4,10 +4,15 @@
   "private": true,
   "description": "Frontend build for the CoffeeWebShop Django project",
   "scripts": {
-    "build": "tailwindcss -i ./static/src/input.css -o ./static/css/main.css --minify",
+    "fonts": "mkdir -p static/css/files && cp node_modules/@fontsource/playfair-display/files/playfair-display-latin-[47]00-normal.woff* node_modules/@fontsource/great-vibes/files/great-vibes-latin-400-normal.woff* node_modules/@fontsource/lato/files/lato-latin-[47]00-normal.woff* static/css/files/",
+    "css": "tailwindcss -i ./static/src/input.css -o ./static/css/main.css --minify",
+    "build": "npm run fonts && npm run css",
     "watch": "tailwindcss -i ./static/src/input.css -o ./static/css/main.css --watch"
   },
   "devDependencies": {
+    "@fontsource/great-vibes": "^5.3.0",
+    "@fontsource/lato": "^5.3.0",
+    "@fontsource/playfair-display": "^5.3.0",
     "tailwindcss": "3.4.7"
   }
 }

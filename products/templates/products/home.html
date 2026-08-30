@@ -1,64 +1,145 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Home - Coffee Shop{% endblock %}
+{% block title %}Maison Roast — Coffee &amp; Patisserie{% endblock %}
 
 {% block content %}
-<div class="fade-in">
-    <!-- Hero Section -->
-    <div class="bg-gradient-to-r from-amber-700 to-orange-800 rounded-3xl shadow-2xl overflow-hidden mb-12">
-        <div class="px-8 py-16 md:py-24 text-center">
-            <h1 class="text-5xl md:text-6xl font-bold text-white mb-6">
-                Welcome to Coffee Shop
+
+<!-- ==================== Hero ==================== -->
+<section class="fade-in relative overflow-hidden rounded-3xl border border-gold/25">
+    <img src="{% static 'images/brown_vintage.jpg' %}" alt=""
+         class="absolute inset-0 h-full w-full object-cover" aria-hidden="true">
+    <div class="absolute inset-0 bg-gradient-to-r from-espresso via-espresso/80 to-espresso/30" aria-hidden="true"></div>
+
+    <div class="relative grid grid-cols-1 items-center gap-8 px-6 py-16 sm:px-10 lg:grid-cols-3 lg:py-24">
+        <div class="lg:col-span-2">
+            <h1 class="font-display text-4xl font-bold leading-tight text-crema sm:text-5xl xl:text-6xl">
+                Good coffee.<br>Sweet moments.
             </h1>
-            <p class="text-xl md:text-2xl text-amber-100 mb-8 max-w-3xl mx-auto">
-                Discover our carefully curated selection of premium coffee products
+            <p class="mt-2 font-script text-4xl text-terracotta-400 sm:text-5xl">Made for you.</p>
+
+            <p class="mt-6 max-w-md text-base leading-relaxed text-crema/80">
+                Artisan coffee and pastries made with heart and tradition.
             </p>
-            <a href="{% url 'product_list' %}" class="inline-block bg-white text-amber-900 px-8 py-4 rounded-full font-semibold text-lg hover:bg-amber-100 transform hover:scale-105 transition duration-300 shadow-lg">
-                Browse Products
-            </a>
+
+            <a href="{% url 'product_list' %}" class="btn-terracotta mt-8">Explore Our Menu</a>
+        </div>
+
+        <!-- Today's Special chalkboard -->
+        <div class="rounded-2xl border-4 border-roast-400 bg-espresso/80 p-6 text-center shadow-2xl backdrop-blur-sm">
+            <p class="font-script text-2xl text-gold-400">Today&rsquo;s Special</p>
+            <p class="mx-auto my-3 h-px w-24 bg-gold/40"></p>
+            {% if featured_products.0 %}
+                <p class="font-script text-3xl leading-snug text-crema">
+                    {{ featured_products.0.name }}
+                </p>
+                <p class="mt-2 font-display text-xl text-terracotta-400">
+                    ${{ featured_products.0.price }}
+                </p>
+            {% else %}
+                <p class="font-script text-2xl text-crema">Freshly brewed,<br>every morning</p>
+            {% endif %}
+            <p class="heart-rule" aria-hidden="true">&#9825;</p>
         </div>
     </div>
+</section>
 
-    <!-- Features Section -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-        <div class="bg-white rounded-2xl shadow-lg p-8 text-center transform hover:scale-105 transition duration-300">
-            <div class="bg-amber-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <svg class="w-8 h-8 text-amber-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
-                </svg>
-            </div>
-            <h3 class="text-xl font-bold text-gray-800 mb-2">Premium Quality</h3>
-            <p class="text-gray-600">Only the finest coffee beans from around the world</p>
-        </div>
-
-        <div class="bg-white rounded-2xl shadow-lg p-8 text-center transform hover:scale-105 transition duration-300">
-            <div class="bg-amber-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <svg class="w-8 h-8 text-amber-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-            </div>
-            <h3 class="text-xl font-bold text-gray-800 mb-2">Fast Delivery</h3>
-            <p class="text-gray-600">Quick and reliable shipping to your doorstep</p>
-        </div>
-
-        <div class="bg-white rounded-2xl shadow-lg p-8 text-center transform hover:scale-105 transition duration-300">
-            <div class="bg-amber-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                <svg class="w-8 h-8 text-amber-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/>
-                </svg>
-            </div>
-            <h3 class="text-xl font-bold text-gray-800 mb-2">Customer Satisfaction</h3>
-            <p class="text-gray-600">100% satisfaction guaranteed or your money back</p>
-        </div>
+<!-- ==================== Category tiles ==================== -->
+{% if categories %}
+<section class="reveal mt-8">
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        {% for category in categories %}
+        <a href="{% url 'product_list' %}?category={{ category|urlencode }}"
+           class="panel-cream paper flex items-center gap-3 px-4 py-4 transition hover:-translate-y-0.5 hover:shadow-gold/20">
+            <img src="{% static 'icons/coffee_cup3.svg' %}" alt=""
+                 class="h-10 w-10 shrink-0" aria-hidden="true">
+            <span class="min-w-0">
+                <span class="block truncate font-display text-sm font-bold uppercase tracking-wide text-espresso">
+                    {{ category }}
+                </span>
+                <span class="block text-xs text-roast/70">Browse</span>
+            </span>
+        </a>
+        {% endfor %}
     </div>
+</section>
+{% endif %}
 
-    <!-- Call to Action -->
-    <div class="bg-white rounded-3xl shadow-xl p-12 text-center">
-        <h2 class="text-3xl font-bold text-gray-800 mb-4">Ready to explore our collection?</h2>
-        <p class="text-gray-600 mb-6">Browse through our selection of premium coffee products</p>
-        <a href="{% url 'product_list' %}" class="inline-block bg-gradient-to-r from-amber-700 to-orange-800 text-white px-8 py-4 rounded-full font-semibold text-lg hover:from-amber-800 hover:to-orange-900 transform hover:scale-105 transition duration-300 shadow-lg">
-            View All Products
+<!-- ==================== Our Favorites ==================== -->
+<section class="reveal mt-14">
+    <div class="mb-8 flex items-center justify-between gap-4">
+        <p class="filigree flex-1 text-gold">Our Favorites</p>
+        <a href="{% url 'product_list' %}"
+           class="shrink-0 border-b border-gold/60 pb-1 font-body text-sm uppercase tracking-wider text-crema/80 transition hover:text-gold">
+            View All &rarr;
         </a>
     </div>
-</div>
+
+    {% if featured_products %}
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        {% for product in featured_products %}
+        <article class="panel-dark group flex flex-col overflow-hidden">
+            <a href="{% url 'product_detail' product.slug %}" class="img-frame block">
+                {# TODO: swap product.product_image (external URL) for a local static image. #}
+                <img src="{{ product.product_image }}" alt="{{ product.name }}"
+                     loading="lazy" data-fallback>
+                <span class="img-fallback" hidden>
+                    <img src="{% static 'icons/coffee_pot.svg' %}" alt="" class="h-16 w-16" aria-hidden="true">
+                </span>
+            </a>
+
+            <div class="flex flex-1 flex-col p-4 text-center">
+                <h3 class="font-display text-lg font-bold text-crema">
+                    <a href="{% url 'product_detail' product.slug %}" class="transition hover:text-gold-400">
+                        {{ product.name }}
+                    </a>
+                </h3>
+                <p class="mt-1 font-display text-lg text-terracotta-400">${{ product.price }}</p>
+
+                <div class="mt-4 flex-1"></div>
+
+                {% if product.stock > 0 %}
+                    <a href="{% url 'add_product_order' %}?product_id={{ product.id }}"
+                       class="btn-terracotta w-full px-4 py-2 text-xs">
+                        Buy Now
+                    </a>
+                {% else %}
+                    <span class="inline-flex w-full items-center justify-center rounded-full bg-roast-600 px-4 py-2 text-xs uppercase tracking-wider text-crema/50">
+                        Sold Out
+                    </span>
+                {% endif %}
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="panel-dark p-10 text-center text-crema/70">
+        Our menu is being prepared. Please check back shortly.
+    </p>
+    {% endif %}
+</section>
+
+<!-- ==================== Closing invitation ==================== -->
+{% comment %}
+brown_pattern.jpg is 784x490 and its left/right edges do not match, so it is used
+as a covering background rather than a repeating tile -- repeating it would show
+seams. The espresso scrim keeps the text readable over the busiest part of it.
+{% endcomment %}
+<section class="reveal relative mt-14 overflow-hidden rounded-3xl border border-gold/25">
+    <img src="{% static 'images/brown_pattern.jpg' %}" alt=""
+         class="absolute inset-0 h-full w-full object-cover" aria-hidden="true">
+    <div class="absolute inset-0 bg-espresso/75" aria-hidden="true"></div>
+
+    <div class="relative px-6 py-16 text-center sm:px-10">
+        <h2 class="font-display text-3xl font-bold text-crema sm:text-4xl">
+            Ready to explore our collection?
+        </h2>
+        <p class="mt-3 text-crema/80">
+            Browse our selection of premium coffee and handmade pastries.
+        </p>
+        <a href="{% url 'product_list' %}" class="btn-terracotta mt-8">View All Products</a>
+        <p class="heart-rule" aria-hidden="true">&#9825;</p>
+    </div>
+</section>
+
 {% endblock %}

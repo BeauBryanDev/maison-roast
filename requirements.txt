@@ -19,3 +19,19 @@ django-filter==26.1
 # not ImageFields. Kept because MEDIA_ROOT/MEDIA_URL are configured for a
 # future switch to real uploads. Safe to drop if that never happens.
 pillow==12.1.0
+
+# --- Basil agent (MASTER_SPEC.md / BASIL_LAYER.md) ---
+# Versions are the ones installed and verified in this venv on 2026-08-29.
+
+# Claude Haiku, called directly. No LangChain/LangGraph (MASTER_SPEC 3).
+anthropic==1.2.0
+
+# ONNX inference for the food classifier, CPUExecutionProvider (MASTER_SPEC 8.1).
+onnxruntime==1.29.0
+
+# Embeddings for the RAG corpus (MASTER_SPEC 7). Phase 6.
+voyageai==0.5.0
+
+# pgvector Django/psycopg glue. Phase 6 -- also needs the pgvector/pgvector:pg15
+# Docker image; the stock postgres:15 image does not ship the extension.
+pgvector==0.5.0

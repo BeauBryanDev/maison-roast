@@ -1,6 +1,123 @@
+/* Self-hosted fonts. Deliberately NOT a Google Fonts <link>: this site was already
+   broken once by a retired CDN (cdn.tailwindcss.com), and a webfont link is the same
+   failure mode. postcss-import (bundled with the Tailwind CLI) inlines the @font-face
+   rules at build time -- but it does NOT copy the font binaries, hence the copy step.
+   Latin subsets only -- the full packages ship 48/20/6 woff2 files across Cyrillic,
+   Greek and Vietnamese that this site has no use for. `npm run build` copies the
+   matching files into static/css/files/, which is where these @font-face rules
+   resolve to. */
+@import '@fontsource/playfair-display/latin-400.css';
+@import '@fontsource/playfair-display/latin-700.css';
+@import '@fontsource/great-vibes/latin-400.css';
+@import '@fontsource/lato/latin-400.css';
+@import '@fontsource/lato/latin-700.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-espresso text-crema font-body antialiased;
+  }
+
+  h1, h2, h3 {
+    @apply font-display;
+  }
+}
+
+@layer components {
+  /* ---- Ornaments -------------------------------------------------------- */
+
+  /* Section heading with a filigree rule either side: ❦ OUR FAVORITES ❦ */
+  .filigree {
+    @apply flex items-center justify-center gap-4 font-display text-2xl
+           uppercase tracking-widest2;
+  }
+  .filigree::before,
+  .filigree::after {
+    content: '';
+    @apply h-px w-16 bg-gradient-to-r from-transparent via-gold to-transparent;
+  }
+
+  /* Small heart used as a section terminator in the mockups. */
+  .heart-rule {
+    @apply mx-auto my-6 block text-center text-gold;
+  }
+
+  /* ---- Panels ----------------------------------------------------------- */
+
+  .panel-cream {
+    @apply rounded-3xl border border-gold/40 bg-crema text-espresso shadow-2xl;
+  }
+
+  .panel-dark {
+    @apply rounded-2xl border border-gold/25 bg-roast text-crema shadow-xl;
+  }
+
+  /* Parchment tint for the light bands. Kept as a gradient rather than an image
+     so it costs nothing and cannot 404. */
+  .paper {
+    background-image:
+      radial-gradient(circle at 20% 20%, rgba(200, 162, 106, 0.10), transparent 45%),
+      radial-gradient(circle at 80% 70%, rgba(192, 98, 44, 0.08), transparent 40%);
+  }
+
+  /* ---- Controls ---------------------------------------------------------- */
+
+  .btn-terracotta {
+    @apply inline-flex items-center justify-center gap-2 rounded-full
+           bg-terracotta px-8 py-3 font-body font-bold uppercase tracking-wider
+           text-crema-200 shadow-lg transition
+           hover:bg-terracotta-600 focus:outline-none
+           focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2
+           focus-visible:ring-offset-espresso;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-full
+           border border-gold/50 px-6 py-2 font-body uppercase tracking-wider
+           text-crema transition hover:border-gold hover:text-gold-400
+           focus:outline-none focus-visible:ring-2 focus-visible:ring-gold;
+  }
+
+  .nav-link {
+    @apply font-body text-sm uppercase tracking-wider text-crema/80 transition
+           hover:text-crema;
+  }
+  .nav-link-active {
+    @apply text-terracotta-400 border-b-2 border-terracotta pb-1;
+  }
+
+  /* Inputs on a cream/parchment panel (auth forms, add product). */
+  .field-cream {
+    @apply w-full rounded-lg border border-gold/50 bg-crema-200 px-4 py-3
+           text-espresso placeholder-roast/40 transition
+           focus:border-terracotta focus:outline-none focus:ring-1 focus:ring-terracotta;
+  }
+
+  /* Inputs on the dark ground (the Basil rail). */
+  .field-vintage {
+    @apply w-full rounded-lg border border-gold/40 bg-espresso-700 px-4 py-3
+           text-crema placeholder-crema/40 transition
+           focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold;
+  }
+
+  /* ---- Product imagery --------------------------------------------------- */
+
+  /* Fixed ratio box: a missing or 404ing image cannot collapse the card.
+     See main.js for the onerror fallback that swaps in the local placeholder. */
+  .img-frame {
+    @apply relative overflow-hidden bg-roast-600;
+    aspect-ratio: 4 / 3;
+  }
+  .img-frame > img {
+    @apply h-full w-full object-cover;
+  }
+  .img-frame > .img-fallback {
+    @apply absolute inset-0 flex items-center justify-center opacity-40;
+  }
+}
 
 @layer utilities {
   @keyframes fadeIn {
@@ -16,5 +133,30 @@
 
   .fade-in {
     animation: fadeIn 0.6s ease-out;
+  }
+
+  /* Scroll-reveal target. main.js adds .is-visible via IntersectionObserver. */
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+  }
+  .reveal.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Anyone who asks for less motion gets none of it -- including the reveal,
+     which would otherwise leave content invisible if JS were slow. */
+  @media (prefers-reduced-motion: reduce) {
+    .fade-in {
+      animation: none;
+    }
+    .reveal,
+    .reveal.is-visible {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
   }
 }

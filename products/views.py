@@ -1,23 +1,41 @@
-from django.shortcuts import render
-from django.http import HttpResponse
-from django.template import loader
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
-from django.views.generic import  ListView, DetailView , TemplateView , FormView
-from django.core.paginator import Paginator
+from django.views.generic import ListView, DetailView, TemplateView
+from django.views.generic.edit import CreateView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
 from .models import Product
 from .forms import ProductForm
-from .serializers import ProductSerializer, CategorySerializer, ProductInCategorySerializer
+from .serializers import ProductSerializer
 from .permissions import IsStaffOrReadOnly
 # Create your views here.
 
-class home(TemplateView):
+class HomeView(TemplateView):
     template_name = 'products/home.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # "Our Favorites" on the home page. Available products only -- the strip
+        # links straight to Buy Now, so it must not offer something unbuyable.
+        context['featured_products'] = (
+            Product.objects.filter(available=True).order_by('-created_at')[:5]
+        )
+        # Category tiles are built from what is actually in the catalog, so a
+        # tile can never lead to an empty menu page.
+        context['categories'] = (
+            Product.objects.filter(available=True)
+            .values_list('category', flat=True)
+            .distinct()
+            .order_by('category')
+        )
+        return context
+
+
+class AboutView(TemplateView):
+    template_name = 'products/about.html'
     
 
 class ProductListView(ListView):
@@ -26,9 +44,26 @@ class ProductListView(ListView):
     context_object_name = 'products'
     paginate_by = 9  
     ordering = ['-created_at']
-    
+
+    def get_queryset(self):
+        """Optionally narrow the menu with ?category=<name>.
+
+        Unavailable products are deliberately NOT filtered out -- the templates
+        show them with an "Out of Stock" badge and a disabled button, and the
+        server refuses to sell them. See Refactor_backend.md #11.
+        """
+        queryset = super().get_queryset()
+        category = self.request.GET.get('category')
+        if category:
+            queryset = queryset.filter(category=category)
+        return queryset
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['active_category'] = self.request.GET.get('category', '')
+        context['categories'] = (
+            Product.objects.values_list('category', flat=True).distinct().order_by('category')
+        )
         return context
     
 class ProductDetailView(DetailView):
@@ -42,12 +77,13 @@ class ProductDetailView(DetailView):
     
     
     
-class ProductFormView( LoginRequiredMixin, UserPassesTestMixin, FormView ):
+class ProductFormView( LoginRequiredMixin, UserPassesTestMixin, CreateView ):
 
     # Adding to the catalog is a staff action. Django's AccessMixin already does
     # the right thing here: anonymous visitors are redirected to the login page,
     # while authenticated non-staff users get a 403. Setting raise_exception
     # would give anonymous users a 403 too, with no way to log in.
+    model = Product
     template_name = 'products/add_product.html'
     form_class = ProductForm
     success_url = reverse_lazy('product_list')
@@ -55,12 +91,14 @@ class ProductFormView( LoginRequiredMixin, UserPassesTestMixin, FormView ):
     def test_func(self):
         return self.request.user.is_staff
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Suggestions for the free-text category field (a CharField, not a FK).
+        context['categories'] = (
+            Product.objects.values_list('category', flat=True).distinct().order_by('category')
+        )
+        return context
 
-    def form_valid(self, form):
-        form.save()
-        return super().form_valid(form)
-    
-    
 
 class ProductListAPI( APIView ):
 
@@ -121,22 +159,3 @@ class ProductListAPI( APIView ):
         product.delete()
         
         return Response({'message': 'Product deleted successfully.'}, status=status.HTTP_200_OK)
-    
-    
-"""
-mocha coffee adddress
-https://hoxtoncoffee.com/cdn/shop/articles/latte-art-on-mocha_1200x1200.jpg?v=1660069726
-
-Expreso Coffee address
-https://www.cafe-mx.com/blog/app/assets/media/2018/08/cafe-expreso.jpg
-
-capuchino coffee 
-https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRfPhPty83awEZiMFjBwtr4qai6J1evVnn7Vg&s
-
-cold brew 
-https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQKPhK6VkiP1hWTryv_ZW_NvQsqAQ48VQRIug&s
-
-Ice latte
-https://markieskitchen.com/wp-content/uploads/2022/07/iced-mocha-latte-4.jpg
-
-"""

@@ -192,3 +192,167 @@ class AdminSmokeTestCase(TestCase):
         response = self.client.get(f"/admin/orders/order/{order.pk}/change/")
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "product_orders-0-quantity")
+
+
+class ProfileAPITestCase(TestCase):
+    """/api/users/me/ -- the account as its owner sees it.
+
+    Tenancy is enforced by get_object() returning request.user; there is no id
+    in the URL, so these tests assert one account can never reach another.
+    """
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="owner", password="Orig-Passw0rd!", email="owner@example.com",
+            first_name="Ada", last_name="Lovelace",
+            phone_number="0100", address="1 Old Street",
+        )
+        self.other = User.objects.create_user(
+            username="intruder", password="Other-Passw0rd!", email="other@example.com",
+            first_name="Someone", last_name="Else",
+        )
+        self.url = reverse("api_me")
+        self.password_url = reverse("api_me_password")
+
+    # ---------------------------------------------------------- permissions --
+    def test_anonymous_is_refused_every_method(self):
+        for method in ("get", "put", "patch", "delete"):
+            with self.subTest(method=method):
+                response = getattr(self.client, method)(
+                    self.url, data={}, content_type="application/json")
+                self.assertEqual(response.status_code, 403)
+
+    def test_get_returns_only_the_logged_in_account(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["username"], "owner")
+        self.assertNotEqual(response.json()["username"], "intruder")
+
+    # ---------------------------------------------------------------- update --
+    def test_put_updates_every_editable_field(self):
+        self.client.force_login(self.user)
+        response = self.client.put(self.url, data={
+            "first_name": "Grace", "last_name": "Hopper",
+            "phone_number": "0200", "address": "2 New Street",
+        }, content_type="application/json")
+
+        self.assertEqual(response.status_code, 200)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.first_name, "Grace")
+        self.assertEqual(self.user.address, "2 New Street")
+
+    def test_patch_updates_one_field_and_leaves_the_rest(self):
+        self.client.force_login(self.user)
+        response = self.client.patch(self.url, data={"phone_number": "0300"},
+                                     content_type="application/json")
+
+        self.assertEqual(response.status_code, 200)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.phone_number, "0300")
+        self.assertEqual(self.user.first_name, "Ada")   # untouched
+
+    def test_username_and_email_cannot_be_changed(self):
+        """They are read_only on the serializer, so a forged body is ignored."""
+        self.client.force_login(self.user)
+        response = self.client.put(self.url, data={
+            "username": "admin", "email": "hacker@example.com",
+            "first_name": "Ada", "last_name": "Lovelace",
+            "phone_number": "0100", "address": "1 Old Street",
+        }, content_type="application/json")
+
+        self.assertEqual(response.status_code, 200)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.username, "owner")
+        self.assertEqual(self.user.email, "owner@example.com")
+
+    # -------------------------------------------------------------- password --
+    def test_password_change_requires_the_current_password(self):
+        self.client.force_login(self.user)
+        response = self.client.post(self.password_url, data={
+            "old_password": "wrong-password",
+            "new_password1": "Brand-New-Pw1!", "new_password2": "Brand-New-Pw1!",
+        }, content_type="application/json")
+
+        self.assertEqual(response.status_code, 400)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password("Orig-Passw0rd!"))
+
+    def test_password_change_keeps_the_session_alive(self):
+        """Without update_session_auth_hash the user is logged out of their own
+        session the instant they change their password."""
+        self.client.force_login(self.user)
+        response = self.client.post(self.password_url, data={
+            "old_password": "Orig-Passw0rd!",
+            "new_password1": "Brand-New-Pw1!", "new_password2": "Brand-New-Pw1!",
+        }, content_type="application/json")
+
+        self.assertEqual(response.status_code, 200)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password("Brand-New-Pw1!"))
+        # still authenticated on the same session
+        self.assertEqual(self.client.get(self.url).status_code, 200)
+
+    def test_mismatched_new_passwords_are_rejected(self):
+        self.client.force_login(self.user)
+        response = self.client.post(self.password_url, data={
+            "old_password": "Orig-Passw0rd!",
+            "new_password1": "Brand-New-Pw1!", "new_password2": "Different-Pw1!",
+        }, content_type="application/json")
+
+        self.assertEqual(response.status_code, 400)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password("Orig-Passw0rd!"))
+
+    # ------------------------------------------------------------ deactivate --
+    def test_delete_without_password_is_refused(self):
+        self.client.force_login(self.user)
+        response = self.client.delete(self.url, data={},
+                                      content_type="application/json")
+
+        self.assertEqual(response.status_code, 400)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.is_active)
+
+    def test_delete_with_wrong_password_is_refused(self):
+        self.client.force_login(self.user)
+        response = self.client.delete(self.url, data={"password": "nope"},
+                                      content_type="application/json")
+
+        self.assertEqual(response.status_code, 400)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.is_active)
+
+    def test_delete_deactivates_keeps_the_row_and_blocks_login(self):
+        self.client.force_login(self.user)
+        response = self.client.delete(self.url, data={"password": "Orig-Passw0rd!"},
+                                      content_type="application/json")
+
+        self.assertEqual(response.status_code, 204)
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.is_active)
+        self.assertTrue(User.objects.filter(pk=self.user.pk).exists())  # soft delete
+        self.assertFalse(
+            self.client.login(username="owner", password="Orig-Passw0rd!"))
+
+
+class ProfilePageTestCase(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="pageuser", password="testpassword", email="page@example.com")
+        self.url = reverse("profile")
+
+    def test_anonymous_is_redirected_to_login(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/users/login/", response.url)
+
+    def test_profile_page_renders_for_its_owner(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "users/profile.html")
+        self.assertContains(response, "pageuser")
+        # CSRF token must be present or every fetch() 403s
+        self.assertContains(response, "csrfmiddlewaretoken")
