@@ -5,7 +5,7 @@
 
 {% block content %}
 
-<!-- ==================== Hero ==================== -->
+<!--HERO -->
 <section class="fade-in relative overflow-hidden rounded-3xl border border-gold/25">
     <img src="{% static 'images/brown_vintage.jpg' %}" alt=""
          class="absolute inset-0 h-full w-full object-cover" aria-hidden="true">
@@ -44,18 +44,18 @@
     </div>
 </section>
 
-<!-- ==================== Category tiles ==================== -->
+<!--CATEGORY TILES -->
 {% if categories %}
 <section class="reveal mt-8">
     <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {% for category in categories %}
-        <a href="{% url 'product_list' %}?category={{ category|urlencode }}"
+        <a href="{% url 'product_list' %}?category={{ category.name|urlencode }}"
            class="panel-cream paper flex items-center gap-3 px-4 py-4 transition hover:-translate-y-0.5 hover:shadow-gold/20">
             <img src="{% static 'icons/coffee_cup3.svg' %}" alt=""
                  class="h-10 w-10 shrink-0" aria-hidden="true">
             <span class="min-w-0">
                 <span class="block truncate font-display text-sm font-bold uppercase tracking-wide text-espresso">
-                    {{ category }}
+                    {{ category.name }}
                 </span>
                 <span class="block text-xs text-roast/70">Browse</span>
             </span>
@@ -65,7 +65,7 @@
 </section>
 {% endif %}
 
-<!-- ==================== Our Favorites ==================== -->
+<!-- Our Favorites -->
 <section class="reveal mt-14">
     <div class="mb-8 flex items-center justify-between gap-4">
         <p class="filigree flex-1 text-gold">Our Favorites</p>
@@ -119,12 +119,7 @@
     {% endif %}
 </section>
 
-<!-- ==================== Closing invitation ==================== -->
-{% comment %}
-brown_pattern.jpg is 784x490 and its left/right edges do not match, so it is used
-as a covering background rather than a repeating tile -- repeating it would show
-seams. The espresso scrim keeps the text readable over the busiest part of it.
-{% endcomment %}
+<!--  Closing invitation   -->
 <section class="reveal relative mt-14 overflow-hidden rounded-3xl border border-gold/25">
     <img src="{% static 'images/brown_pattern.jpg' %}" alt=""
          class="absolute inset-0 h-full w-full object-cover" aria-hidden="true">

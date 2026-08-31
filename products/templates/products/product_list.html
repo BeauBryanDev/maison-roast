@@ -6,7 +6,7 @@
 {% block content %}
 <div class="fade-in">
 
-    <!-- ==================== Header ==================== -->
+    <!--  Header  -->
     <header class="text-center">
         <p class="filigree text-gold">Our Menu</p>
         <p class="mx-auto mt-4 max-w-xl text-crema/75">
@@ -14,7 +14,7 @@
         </p>
     </header>
 
-    <!-- ==================== Category filter ==================== -->
+    <!--  Category filter   -->
     {% if categories %}
     <nav class="mt-8 flex flex-wrap justify-center gap-2" aria-label="Filter by category">
         <a href="{% url 'product_list' %}"
@@ -23,16 +23,16 @@
             All
         </a>
         {% for category in categories %}
-        <a href="?category={{ category|urlencode }}"
+        <a href="?category={{ category.name|urlencode }}"
            class="rounded-full border px-4 py-2 text-xs uppercase tracking-wider transition
-                  {% if active_category == category %}border-terracotta bg-terracotta text-crema-200{% else %}border-gold/40 text-crema/80 hover:border-gold hover:text-gold-400{% endif %}">
-            {{ category }}
+                  {% if active_category == category.name %}border-terracotta bg-terracotta text-crema-200{% else %}border-gold/40 text-crema/80 hover:border-gold hover:text-gold-400{% endif %}">
+            {{ category.name }}
         </a>
         {% endfor %}
     </nav>
     {% endif %}
 
-    <!-- ==================== Grid ==================== -->
+    <!--  Grid  -->
     {% if products %}
     <div class="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {% for product in products %}
@@ -49,14 +49,9 @@
                 </span>
 
                 <span class="absolute right-3 top-3 rounded-full bg-espresso/85 px-3 py-1 text-xs uppercase tracking-wider text-gold">
-                    {{ product.category }}
+                    {{ product.categories.all|join:", " }}
                 </span>
 
-                {% comment %}
-                Unavailable products stay on the shelf with a badge rather than being
-                filtered out -- the server refuses the purchase either way.
-                See Refactor_backend.md #11.
-                {% endcomment %}
                 {% if not product.available %}
                 <span class="absolute left-3 top-3 rounded-full bg-red-800/90 px-3 py-1 text-xs uppercase tracking-wider text-crema">
                     Out of Stock
@@ -106,11 +101,8 @@
         {% endfor %}
     </div>
 
-    <!-- ==================== Pagination ==================== -->
-    {% comment %}
-    Every link carries the active category forward. A bare ?page=2 would silently
-    drop the filter and drop the visitor back into the full menu.
-    {% endcomment %}
+    <!--  Pagination  -->
+
     {% if is_paginated %}
     <nav class="mt-12 flex flex-wrap items-center justify-center gap-3" aria-label="Pagination">
         {% if page_obj.has_previous %}
@@ -134,7 +126,7 @@
     {% endif %}
 
     {% else %}
-    <!-- ==================== Empty state ==================== -->
+    <!--  Empty state  -->
     <div class="panel-cream paper mt-10 px-6 py-16 text-center">
         <img src="{% static 'icons/coffee_pot.svg' %}" alt=""
              class="mx-auto h-20 w-20 opacity-40" aria-hidden="true">

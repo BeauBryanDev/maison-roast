@@ -14,12 +14,6 @@
     <form method="post" action="{% url 'product_add' %}" class="panel-cream paper mt-8 p-8">
         {% csrf_token %}
 
-        {% comment %}
-        The previous version of this template rendered no errors at all, so an
-        invalid submission returned a blank form with no explanation and the
-        staff member's input lost (Refactor_backend.md #15). Errors are shown now,
-        and every field is repopulated from form.<field>.value.
-        {% endcomment %}
         {% if form.errors %}
         <div class="mb-6 rounded-lg border-l-4 border-red-700 bg-red-100 p-4 text-sm text-red-900">
             <p class="font-semibold">This product was not saved:</p>
@@ -70,16 +64,25 @@
             </div>
 
             <div class="sm:col-span-2">
-                <label for="category" class="mb-2 block font-display text-sm uppercase tracking-widest text-roast/70">
-                    Category <span class="text-terracotta">*</span>
-                </label>
-                <input type="text" id="category" name="category" required class="field-cream"
-                       list="category-options" value="{{ form.category.value|default:'' }}"
-                       placeholder="Hot Coffee">
-                {# Free-text CharField, not a FK -- the datalist just suggests existing values. #}
-                <datalist id="category-options">
-                    {% for category in categories %}<option value="{{ category }}"></option>{% endfor %}
-                </datalist>
+                <span class="mb-2 block font-display text-sm uppercase tracking-widest text-roast/70">
+                    Categories
+                </span>
+                {% comment %}
+                A real M2M now, so this is a checkbox list rather than a free-text
+                box: a product is several things at once (an iced latte is Coffee,
+                Iced, Espresso and Milky), and typing invented a new menu chip per
+                spelling. Add a new category in the admin.
+                {% endcomment %}
+                <div class="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
+                    {% for choice in form.categories %}
+                    <label class="flex items-center gap-2 text-sm text-roast">
+                        {{ choice.tag }} {{ choice.choice_label }}
+                    </label>
+                    {% endfor %}
+                </div>
+                {% if form.categories.errors %}
+                <p class="mt-2 text-sm text-terracotta">{{ form.categories.errors|join:" " }}</p>
+                {% endif %}
             </div>
 
             <div class="sm:col-span-2">

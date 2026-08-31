@@ -11,7 +11,13 @@ class Product(models.Model):
     available = models.BooleanField(default=True)
     product_image = models.URLField(max_length=200, null=True, blank=True, verbose_name="Product Image")
     slug = models.SlugField(max_length=64, unique=True, blank=True)
-    category = models.CharField(max_length=32, verbose_name="Product Category")
+    # Many-to-many because one drink is honestly several things at once: an
+    # Iced Latte is Coffee, Iced, Espresso and Milky. A single category would
+    # make "show me hot coffee" miss whatever was filed under Latte.
+    categories = models.ManyToManyField(
+        'Category', related_name='products', blank=True,
+        verbose_name="Product Categories",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

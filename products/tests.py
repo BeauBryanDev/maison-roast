@@ -1,6 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
-from .models import Product
+from .models import Category, Product
+from .test_utils import make_product
 from django.urls import reverse
 
 User = get_user_model()
@@ -58,12 +59,12 @@ class AboutViewTestCase(TestCase):
 
 class HomeViewTestCase(TestCase):
     def setUp(self):
-        self.available = Product.objects.create(
-            name="Featured Latte", description="d", price=3.50, stock=5, category="Latte",
+        self.available = make_product(
+            "Latte", name="Featured Latte", description="d", price=3.50, stock=5,
         )
-        self.hidden = Product.objects.create(
-            name="Discontinued Brew", description="d", price=9.99, stock=5,
-            category="Latte", available=False,
+        self.hidden = make_product(
+            "Latte", name="Discontinued Brew", description="d", price=9.99,
+            stock=5, available=False,
         )
 
     def test_home_lists_only_available_featured_products(self):
@@ -75,15 +76,14 @@ class HomeViewTestCase(TestCase):
 
     def test_category_tiles_come_from_the_catalog(self):
         response = self.client.get(reverse("home"))
-        self.assertIn("Latte", response.context["categories"])
+        names = [c.name for c in response.context["categories"]]
+        self.assertIn("Latte", names)
 
 
 class ProductListFilterTestCase(TestCase):
     def setUp(self):
-        Product.objects.create(name="Hot One", description="d", price=1, stock=1,
-                               category="Hot Coffee")
-        Product.objects.create(name="Cold One", description="d", price=1, stock=1,
-                               category="Cold Coffee")
+        make_product("Hot Coffee", name="Hot One", description="d", price=1, stock=1)
+        make_product("Cold Coffee", name="Cold One", description="d", price=1, stock=1)
 
     def test_category_filter_narrows_the_menu(self):
         response = self.client.get(reverse("product_list"), {"category": "Hot Coffee"})
@@ -104,8 +104,8 @@ class ProductListFilterTestCase(TestCase):
         """A bare ?page=2 would silently drop the filter and dump the visitor
         back into the full menu."""
         for i in range(12):  # paginate_by = 9, so this spans two pages
-            Product.objects.create(name=f"Hot {i}", description="d", price=1,
-                                   stock=1, category="Hot Coffee")
+            make_product("Hot Coffee", name=f"Hot {i}", description="d",
+                         price=1, stock=1)
 
         response = self.client.get(reverse("product_list"), {"category": "Hot Coffee"})
         self.assertTrue(response.context["is_paginated"])
@@ -115,8 +115,8 @@ class ProductListFilterTestCase(TestCase):
 
     def test_second_page_still_filtered(self):
         for i in range(12):
-            Product.objects.create(name=f"Hot {i}", description="d", price=1,
-                                   stock=1, category="Hot Coffee")
+            make_product("Hot Coffee", name=f"Hot {i}", description="d",
+                         price=1, stock=1)
 
         response = self.client.get(reverse("product_list"),
                                    {"category": "Hot Coffee", "page": 2})
@@ -128,10 +128,10 @@ class ProductSlugTestCase(TestCase):
     def test_duplicate_names_get_distinct_slugs(self):
         """Two products sharing a name must not collide on the unique slug."""
         first = Product.objects.create(
-            name="Duplicate Name", description="d", price=1.00, stock=1, category="c",
+            name="Duplicate Name", description="d", price=1.00, stock=1
         )
         second = Product.objects.create(
-            name="Duplicate Name", description="d", price=1.00, stock=1, category="c",
+            name="Duplicate Name", description="d", price=1.00, stock=1
         )
 
         self.assertEqual(first.slug, "duplicate-name")
@@ -139,7 +139,7 @@ class ProductSlugTestCase(TestCase):
 
     def test_name_without_sluggable_characters(self):
         product = Product.objects.create(
-            name="!!!", description="d", price=1.00, stock=1, category="c",
+            name="!!!", description="d", price=1.00, stock=1
         )
         self.assertEqual(product.slug, "product")
 
@@ -148,12 +148,12 @@ class ProductAPISecurityTestCase(TestCase):
     """The catalog API is public to read and staff-only to write."""
 
     def setUp(self):
-        self.product = Product.objects.create(
+        self.product = make_product(
+            "Hot Coffee",
             name="API Test Product",
             description="Test Description",
             price=10.00,
             stock=10,
-            category="Hot Coffee",
         )
         self.customer = User.objects.create_user(
             username="customer", password="testpassword", email="customer@example.com",
@@ -168,7 +168,6 @@ class ProductAPISecurityTestCase(TestCase):
             "description": "Should not be created",
             "price": "1.00",
             "stock": 1,
-            "category": "Hot Coffee",
         }
 
     def test_anonymous_read_is_allowed(self):
@@ -297,3 +296,61 @@ class ProductAddViewPermissionTestCase(TestCase):
 
         product = Product.objects.get(name="Seasonal Blend")
         self.assertFalse(product.available)    
+
+class ErrorPageTestCase(TestCase):
+    """Error templates only render when DEBUG is False, which is why they are
+    easy to ship broken -- nobody sees them in development."""
+
+    def test_404_uses_the_vintage_page(self):
+        with self.settings(DEBUG=False):
+            response = self.client.get("/no-such-page/")
+
+        self.assertEqual(response.status_code, 404)
+        self.assertTemplateUsed(response, "404.html")
+        self.assertContains(response, "This page has left", status_code=404)
+        # It extends base.html, so the nav and the rail come with it.
+        self.assertContains(response, "basil-rail", status_code=404)
+
+    def test_404_offers_a_way_out(self):
+        with self.settings(DEBUG=False):
+            response = self.client.get("/no-such-page/")
+
+        self.assertContains(response, reverse("product_list"), status_code=404)
+        self.assertContains(response, reverse("about"), status_code=404)
+
+    def test_403_is_shown_to_a_signed_in_non_staff_user(self):
+        """ProductFormView raises PermissionDenied for a customer. Anonymous
+        visitors are redirected to login instead and never see this page."""
+        customer = User.objects.create_user(
+            username="nosy", password="testpassword", email="nosy@example.com")
+        self.client.force_login(customer)
+
+        with self.settings(DEBUG=False):
+            response = self.client.get(reverse("product_add"))
+
+        self.assertEqual(response.status_code, 403)
+        self.assertTemplateUsed(response, "403.html")
+        self.assertContains(response, "Staff only", status_code=403)
+        self.assertContains(response, "nosy", status_code=403)
+
+    def test_500_renders_with_no_context_at_all(self):
+        """Django renders 500.html with an empty context -- no request, no user,
+        no context processors. Extending base.html would raise here."""
+        from django.template.loader import render_to_string
+
+        html = render_to_string("500.html")
+
+        self.assertIn("Something boiled over", html)
+        self.assertIn("#1a1108", html)  # styling is inline, not from main.css
+
+    def test_500_does_not_depend_on_the_site_shell(self):
+        """Checked on the rendered output, not the source -- the source
+        mentions csrf_token in a comment explaining why it cannot use one."""
+        from django.template.loader import get_template, render_to_string
+
+        self.assertNotIn("{% extends", get_template("500.html").template.source)
+
+        html = render_to_string("500.html")
+        self.assertNotIn("csrf", html)
+        self.assertNotIn("/static/", html)
+        self.assertNotIn("basil-rail", html)

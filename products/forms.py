@@ -22,8 +22,12 @@ class ProductForm(forms.ModelForm):
             'stock',
             'available',
             'product_image',
-            'category',
+            'categories',
         ]
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'field-cream'}),
+            'categories': forms.CheckboxSelectMultiple,
+        }
 
     def clean_price(self):
         price = self.cleaned_data.get('price')

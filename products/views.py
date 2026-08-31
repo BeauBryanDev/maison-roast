@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from .models import Product
+from .models import Category, Product
 from .forms import ProductForm
 from .serializers import ProductSerializer
 from .permissions import IsStaffOrReadOnly
@@ -23,13 +23,11 @@ class HomeView(TemplateView):
         context['featured_products'] = (
             Product.objects.filter(available=True).order_by('-created_at')[:5]
         )
-        # Category tiles are built from what is actually in the catalog, so a
-        # tile can never lead to an empty menu page.
+        # Category tiles come from categories that actually have an available
+        # product, so a tile can never lead to an empty menu page.
         context['categories'] = (
-            Product.objects.filter(available=True)
-            .values_list('category', flat=True)
-            .distinct()
-            .order_by('category')
+            Category.objects.filter(products__available=True)
+            .distinct().order_by('name')
         )
         return context
 
@@ -52,17 +50,20 @@ class ProductListView(ListView):
         show them with an "Out of Stock" badge and a disabled button, and the
         server refuses to sell them. See Refactor_backend.md #11.
         """
-        queryset = super().get_queryset()
+        queryset = super().get_queryset().prefetch_related('categories')
         category = self.request.GET.get('category')
         if category:
-            queryset = queryset.filter(category=category)
+            # Matched on name so ?category=Coffee keeps working -- existing
+            # links and the pagination URLs carry the name, not an id.
+            queryset = queryset.filter(categories__name=category)
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['active_category'] = self.request.GET.get('category', '')
         context['categories'] = (
-            Product.objects.values_list('category', flat=True).distinct().order_by('category')
+            Category.objects.filter(products__isnull=False)
+            .distinct().order_by('name')
         )
         return context
     
@@ -93,10 +94,6 @@ class ProductFormView( LoginRequiredMixin, UserPassesTestMixin, CreateView ):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Suggestions for the free-text category field (a CharField, not a FK).
-        context['categories'] = (
-            Product.objects.values_list('category', flat=True).distinct().order_by('category')
-        )
         return context
 
 
