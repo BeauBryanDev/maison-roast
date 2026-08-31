@@ -19,6 +19,7 @@ urlpatterns = [
     path('', include('products.urls')),
     path('users/', include('users.urls')),
     path('orders/', include('orders.urls')),
+    path('basil/', include('basil.urls')),
 
     # Mounted here rather than in the app urlconfs so the paths are /api/...
     # and not /users/api/... -- users.urls is included under 'users/'.

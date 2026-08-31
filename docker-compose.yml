@@ -10,7 +10,11 @@
 
 services:
   postgres:
-    image: postgres:15
+    # Same PostgreSQL 15 as the official image, with pgvector compiled in.
+    # postgres:15 does not ship the extension at all -- CREATE EXTENSION vector
+    # fails on a missing vector.control. Staying on 15 keeps the existing data
+    # directory readable, so the volume is reused as is.
+    image: pgvector/pgvector:pg15
     container_name: coffee_shop_db
     restart: unless-stopped
     environment:

@@ -179,7 +179,7 @@ class AdminSmokeTestCase(TestCase):
 
     def test_order_change_form_shows_line_items_inline(self):
         product = Product.objects.create(
-            name="Inline Test Product", description="d", price=3.00, stock=5, category="c",
+            name="Inline Test Product", description="d", price=3.00, stock=5,
         )
         order = Order.objects.create(
             user=self.superuser, order_number="ADM-1", customer_name="Root",
@@ -266,8 +266,7 @@ class ProfileAPITestCase(TestCase):
         self.user.refresh_from_db()
         self.assertEqual(self.user.username, "owner")
         self.assertEqual(self.user.email, "owner@example.com")
-
-    # -------------------------------------------------------------- password --
+ 
     def test_password_change_requires_the_current_password(self):
         self.client.force_login(self.user)
         response = self.client.post(self.password_url, data={
@@ -305,7 +304,7 @@ class ProfileAPITestCase(TestCase):
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password("Orig-Passw0rd!"))
 
-    # ------------------------------------------------------------ deactivate --
+ 
     def test_delete_without_password_is_refused(self):
         self.client.force_login(self.user)
         response = self.client.delete(self.url, data={},

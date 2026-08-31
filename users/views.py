@@ -6,7 +6,6 @@ from django.views.generic import TemplateView
 from django.contrib import messages
 from .forms import CustomUserCreationForm
 
-# Create your views here.
 
 class LogoutView(View):
     """Handle logout with confirmation page"""

@@ -18,10 +18,7 @@ class CustomUserAdmin(UserAdmin):
          {'fields': ('phone_number', 'address')}),
     )
 
-    # The stock add form collects only username and passwords. CustomUser.email
-    # is unique and non-blank, so users added that way all get email='' and the
-    # second one fails with an IntegrityError. Collect it up front, along with
-    # the custom profile fields.
+ 
     add_fieldsets = UserAdmin.add_fieldsets + (
         ('Personal Info', 
          {'fields': ('email', 'first_name', 'last_name')}),
