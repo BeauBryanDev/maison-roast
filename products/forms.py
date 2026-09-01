@@ -9,8 +9,7 @@ class ProductForm(forms.ModelForm):
 
     A ModelForm rather than a plain Form: the field list, max_lengths and
     validation come from the model, so adding a model field no longer needs a
-    matching edit here. `slug` is deliberately excluded -- Product.save()
-    generates it (and resolves collisions).
+    matching edit here.
     """
 
     class Meta:

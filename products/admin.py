@@ -1,3 +1,4 @@
+
 from django.contrib import admin
 from .models import Category, Product
 
@@ -5,6 +6,7 @@ from .models import Category, Product
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
+    
     list_display = ['name', 'category_list', 'price', 'stock', 'available', 'created_at']
     list_filter = ['available', 'categories', 'created_at']
     list_editable = ['price', 'stock', 'available']
@@ -23,15 +25,18 @@ class ProductAdmin(admin.ModelAdmin):
 
     @admin.display(description='Categories')
     def category_list(self, product):
+        
         return ', '.join(c.name for c in product.categories.all()) or '--'
 
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
+    
     list_display = ['name', 'product_count', 'description']
     search_fields = ['name']
     readonly_fields = ['created_at', 'updated_at']
 
     @admin.display(description='Products')
     def product_count(self, category):
+        
         return category.products.count()

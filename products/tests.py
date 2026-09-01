@@ -354,3 +354,93 @@ class ErrorPageTestCase(TestCase):
         self.assertNotIn("csrf", html)
         self.assertNotIn("/static/", html)
         self.assertNotIn("basil-rail", html)
+
+
+class FavouritesPageTestCase(TestCase):
+    """Favourites are localStorage-only, so the server side is a shell plus a
+    heart button on every card. What is asserted here is the contract the JS
+    relies on -- the ids, the markers and the public read it fetches."""
+
+    def setUp(self):
+        self.product = make_product(
+            'Coffee',
+            name='Vanilla Latte', description='Sweet and milky',
+            price='3.80', stock=10)
+
+    def test_favourites_page_is_public(self):
+        response = self.client.get(reverse('favourites'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'products/favourites.html')
+
+    def test_favourites_page_renders_no_products_server_side(self):
+        # The grid is filled by favourites.js. If the product name appears in
+        # the HTML, someone has started rendering favourites from the database.
+        response = self.client.get(reverse('favourites'))
+        self.assertNotContains(response, 'Vanilla Latte')
+        self.assertContains(response, 'id="favourites-grid"')
+
+    def test_menu_card_carries_a_favourite_button_with_the_product_id(self):
+        response = self.client.get(reverse('product_list'))
+        self.assertContains(response, f'data-favourite="{self.product.id}"')
+        self.assertContains(response, 'heart_icon.svg')
+
+    def test_favourites_is_in_the_nav_for_anonymous_visitors(self):
+        # Per-browser storage, so there is nothing to log in for.
+        response = self.client.get(reverse('home'))
+        self.assertContains(response, reverse('favourites'))
+
+    def test_catalog_api_read_is_public(self):
+        # favourites.js fetches this anonymously; a permission change that
+        # locked reads would empty the page with no other symptom.
+        response = self.client.get(reverse('product_list_api'))
+        self.assertEqual(response.status_code, 200)
+
+
+class BarPageTestCase(TestCase):
+    """The bar page is the Alcohol category and nothing else."""
+
+    def setUp(self):
+        self.wine = make_product(
+            'Alcohol', name='Red Wine', description='Deep and dry',
+            price='7.50', stock=15)
+        self.coffee = make_product(
+            'Coffee', name='Espresso', description='Short and strong',
+            price='2.99', stock=50)
+
+    def test_bar_page_is_public(self):
+        response = self.client.get(reverse('bar'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'products/bar.html')
+
+    def test_bar_shows_only_alcohol(self):
+        response = self.client.get(reverse('bar'))
+        self.assertContains(response, 'Red Wine')
+        self.assertNotContains(response, 'Short and strong')
+
+    def test_bar_carries_the_house_notice(self):
+        response = self.client.get(reverse('bar'))
+        self.assertContains(response, 'the clock strikes 18:00')
+        self.assertContains(response, 'Reggae Singer')
+
+    def test_a_product_in_two_categories_is_listed_once(self):
+        # Alcohol overlaps Non-Coffee on the real catalog; the join must not
+        # duplicate the card.
+        both = make_product(
+            'Alcohol', 'Non-Coffee', name='Cabernet Sauvignon',
+            description='House red', price='6.00', stock=20)
+        response = self.client.get(reverse('bar'))
+        self.assertEqual(response.content.decode().count(
+            f'data-favourite="{both.id}"'), 1)
+
+    def test_bar_cards_carry_the_favourite_button(self):
+        response = self.client.get(reverse('bar'))
+        self.assertContains(response, f'data-favourite="{self.wine.id}"')
+
+    def test_bar_carries_the_wallpaper_band(self):
+        response = self.client.get(reverse('bar'))
+        self.assertContains(response, 'bar_wallpaper.jpg')
+        self.assertContains(response, 'Come, Drink and Cheers with us!')
+
+    def test_bar_is_in_the_nav(self):
+        response = self.client.get(reverse('home'))
+        self.assertContains(response, reverse('bar'))

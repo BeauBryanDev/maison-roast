@@ -78,7 +78,12 @@
     {% if featured_products %}
     <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {% for product in featured_products %}
-        <article class="panel-dark group flex flex-col overflow-hidden">
+        <article class="panel-dark group relative flex flex-col overflow-hidden">
+            {# Sibling of the link, not inside it: a button nested in an anchor is invalid. #}
+            <button type="button" class="btn-heart" data-favourite="{{ product.id }}"
+                    aria-pressed="false" aria-label="Save {{ product.name }} to my favourites">
+                <img src="{% static 'icons/heart_icon.svg' %}" alt="" aria-hidden="true">
+            </button>
             <a href="{% url 'product_detail' product.slug %}" class="img-frame block">
                 {# TODO: swap product.product_image (external URL) for a local static image. #}
                 <img src="{{ product.product_image }}" alt="{{ product.name }}"

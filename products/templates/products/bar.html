@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Visit Our Bar — Maison Roast{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+
+    <!--  Header  -->
+    <header class="text-center">
+        <p class="font-script text-4xl text-gold sm:text-5xl">Visit Our Bar</p>
+        <p class="filigree mt-3 text-gold/80">After Eighteen Hundred</p>
+    </header>
+
+    <!--  House notice  -->
+    <section class="panel-plum reveal mx-auto mt-8 max-w-4xl overflow-hidden px-6 py-10 sm:px-12 sm:py-12"
+             aria-labelledby="bar-notice-heading">
+
+        <div class="flex items-center justify-center gap-4">
+            <span class="h-px w-12 bg-gold/50"></span>
+            <img src="{% static 'icons/wine.svg' %}" alt="" class="h-10 w-10 opacity-80" aria-hidden="true">
+            <span class="h-px w-12 bg-gold/50"></span>
+        </div>
+
+        <h2 id="bar-notice-heading"
+            class="mt-6 text-center font-display text-2xl font-bold tracking-wide text-crema sm:text-3xl">
+            The Twilight Hours
+        </h2>
+
+        <p class="mx-auto mt-6 max-w-3xl text-justify font-body text-[0.98rem] leading-8 text-crema/85
+                  first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:font-display
+                  first-letter:text-6xl first-letter:font-bold first-letter:leading-none first-letter:text-gold-400">
+            Welcome to the twilight hours at Maison-Roast. As the clock strikes 18:00, our space
+            transforms, dimming the lights to unveil an exclusive, sophisticated vintage bar
+            atmosphere. Out of deep respect for our younger patrons and family-friendly daytime
+            crowd, our premium selection of artisanal beers, curated fine wines, and classic
+            spirits is strictly reserved for the evening. Maison-Roast proudly stands as a
+            smoking-friendly sanctuary; guests are warmly welcome to enjoy their cigarettes
+            and cigars indoors, provided a peaceful, respectful, and orderly
+            environment is maintained. Step inside, pour a glass, and let time slow down in our
+            nostalgic retreat while you listen to our Reggae Singer.
+        </p>
+
+        <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <span class="rounded-full border border-gold/50 px-4 py-2 text-xs uppercase tracking-widest2 text-gold-400">
+                Doors at 18:00
+            </span>
+            <span class="rounded-full border border-gold/50 px-4 py-2 text-xs uppercase tracking-widest2 text-gold-400">
+                Evenings only
+            </span>
+            <span class="rounded-full border border-gold/50 px-4 py-2 text-xs uppercase tracking-widest2 text-gold-400">
+                Live Reggae
+            </span>
+        </div>
+    </section>
+
+    {% comment %}
+    Wallpaper band. The caption sits over the photo, so the image carries a
+    scrim -- text straight on a photograph is unreadable wherever the picture
+    happens to be light.
+    {% endcomment %}
+    <div class="reveal relative mx-auto mt-12 max-w-5xl overflow-hidden rounded-3xl border border-gold/40 shadow-2xl">
+        <img src="{% static 'images/bar_wallpaper.jpg' %}" alt=""
+             loading="lazy"
+             class="h-[280px] w-full object-cover sm:h-[380px]">
+
+        <div class="absolute inset-0 bg-gradient-to-t from-plum-800/90 via-plum/45 to-transparent"></div>
+
+        <div class="absolute inset-0 flex items-center justify-center px-6">
+            <p class="text-center font-script text-4xl leading-tight text-crema drop-shadow-[0_2px_12px_rgba(0,0,0,0.75)] sm:text-6xl">
+                Come, Drink and Cheers with us!
+            </p>
+        </div>
+    </div>
+
+    <p class="filigree mt-14 text-gold">The Evening Selection</p>
+
+    <!--  Grid  -->
+    {% if products %}
+    <div class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {% for product in products %}
+        <article class="panel-dark reveal flex flex-col overflow-hidden transition hover:-translate-y-1">
+
+            <div class="img-frame">
+                <button type="button" class="btn-heart" data-favourite="{{ product.id }}"
+                        aria-pressed="false" aria-label="Save {{ product.name }} to my favourites">
+                    <img src="{% static 'icons/heart_icon.svg' %}" alt="" aria-hidden="true">
+                </button>
+
+                {% if product.product_image %}
+                <img src="{{ product.product_image }}" alt="{{ product.name }}"
+                     loading="lazy" data-fallback>
+                {% endif %}
+                <span class="img-fallback" {% if product.product_image %}hidden{% endif %}>
+                    <img src="{% static 'icons/wine.svg' %}" alt="" class="h-20 w-20" aria-hidden="true">
+                </span>
+
+                <span class="absolute right-3 top-3 rounded-full bg-espresso/85 px-3 py-1 text-xs uppercase tracking-wider text-gold">
+                    {{ product.categories.all|join:", " }}
+                </span>
+
+                {% if not product.available %}
+                <span class="absolute bottom-3 left-3 rounded-full bg-red-800/90 px-3 py-1 text-xs uppercase tracking-wider text-crema">
+                    Out of Stock
+                </span>
+                {% elif product.stock < 5 %}
+                <span class="absolute bottom-3 left-3 rounded-full bg-terracotta/90 px-3 py-1 text-xs uppercase tracking-wider text-crema">
+                    Last Bottles
+                </span>
+                {% endif %}
+            </div>
+
+            <div class="flex flex-1 flex-col p-5">
+                <h3 class="font-display text-xl font-bold text-crema">
+                    <a href="{% url 'product_detail' product.slug %}" class="transition hover:text-gold-400">
+                        {{ product.name }}
+                    </a>
+                </h3>
+
+                <p class="mt-2 line-clamp-2 text-sm leading-relaxed text-crema/70">
+                    {{ product.description }}
+                </p>
+
+                <div class="mt-4 flex items-baseline justify-between">
+                    <span class="font-display text-2xl text-terracotta-400">${{ product.price }}</span>
+                    <span class="text-xs uppercase tracking-wider text-crema/50">
+                        {{ product.stock }} in stock
+                    </span>
+                </div>
+
+                <div class="mt-5 flex gap-2">
+                    <a href="{% url 'product_detail' product.slug %}" class="btn-ghost flex-1 text-xs">
+                        Details
+                    </a>
+                    {% if product.available and product.stock > 0 %}
+                    <a href="{% url 'add_product_order' %}?product_id={{ product.id }}"
+                       class="btn-terracotta flex-1 px-4 py-2 text-xs">
+                        Buy Now
+                    </a>
+                    {% else %}
+                    <span class="inline-flex flex-1 items-center justify-center rounded-full bg-roast-600 px-4 py-2 text-xs uppercase tracking-wider text-crema/50">
+                        Unavailable
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+
+    <p class="mt-10 text-center text-xs uppercase tracking-widest2 text-crema/40">
+        Please enjoy responsibly — served to guests of legal drinking age only
+    </p>
+
+    {% else %}
+    <!--  Empty state  -->
+    <div class="panel-cream paper mt-8 px-6 py-16 text-center">
+        <img src="{% static 'icons/wine.svg' %}" alt=""
+             class="mx-auto h-20 w-20 opacity-40" aria-hidden="true">
+        <h2 class="mt-6 font-display text-2xl font-bold text-espresso">The cellar is being restocked</h2>
+        <p class="mt-2 text-roast">Our evening selection will return shortly.</p>
+        <a href="{% url 'product_list' %}" class="btn-terracotta mt-8">See the day menu</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

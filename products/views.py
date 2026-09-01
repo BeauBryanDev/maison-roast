@@ -1,3 +1,4 @@
+
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
@@ -11,6 +12,7 @@ from .models import Category, Product
 from .forms import ProductForm
 from .serializers import ProductSerializer
 from .permissions import IsStaffOrReadOnly
+
 # Create your views here.
 
 class HomeView(TemplateView):
@@ -18,8 +20,7 @@ class HomeView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # "Our Favorites" on the home page. Available products only -- the strip
-        # links straight to Buy Now, so it must not offer something unbuyable.
+ 
         context['featured_products'] = (
             Product.objects.filter(available=True).order_by('-created_at')[:5]
         )
@@ -34,9 +35,36 @@ class HomeView(TemplateView):
 
 class AboutView(TemplateView):
     template_name = 'products/about.html'
-    
+
+
+class BarView(ListView):
+    # The evening menu. Matched on the category name, like every other filter
+    # in this app, so the page keeps working if ids move.
+    model = Product
+    template_name = 'products/bar.html'
+    context_object_name = 'products'
+    BAR_CATEGORY = 'Alcohol'
+
+    def get_queryset(self):
+        return (
+            Product.objects.filter(categories__name=self.BAR_CATEGORY)
+            .prefetch_related('categories')
+            .distinct().order_by('name')
+        )
+
+
+class FavouritesView(TemplateView):
+    # Favourites live in the visitor's own localStorage, not the database, so
+    # this renders a shell only. favourites.js reads the stored ids and fills
+    # the grid from the public catalog API, which keeps prices and stock live
+    template_name = 'products/favourites.html'
+    # TOdO: add a "favourites" field to the user profile, so logged-in users can
+    # keep their favourites across devices. The localStorage version is still
+    # useful for anonymous visitors, and for logged-in users who don't want to log in just to browse the catalog.
 
 class ProductListView(ListView):
+    # The evening menu. Matched on the category name, like every other filter
+    # in this app, so the page keeps working if ids move.
     model = Product
     template_name = 'products/product_list.html'
     context_object_name = 'products'
@@ -56,31 +84,35 @@ class ProductListView(ListView):
             # Matched on name so ?category=Coffee keeps working -- existing
             # links and the pagination URLs carry the name, not an id.
             queryset = queryset.filter(categories__name=category)
+            
         return queryset
 
     def get_context_data(self, **kwargs):
+        
         context = super().get_context_data(**kwargs)
         context['active_category'] = self.request.GET.get('category', '')
         context['categories'] = (
             Category.objects.filter(products__isnull=False)
             .distinct().order_by('name')
         )
+        
         return context
     
 class ProductDetailView(DetailView):
+    
     model = Product
     template_name = 'products/product_detail.html'
     context_object_name = 'product'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        
         return context
-    
     
     
 class ProductFormView( LoginRequiredMixin, UserPassesTestMixin, CreateView ):
 
-    # Adding to the catalog is a staff action. Django's AccessMixin already does
+    # Adding to the catalog is a staff action [ admin / staff / superuser ].
     # the right thing here: anonymous visitors are redirected to the login page,
     # while authenticated non-staff users get a 403. Setting raise_exception
     # would give anonymous users a 403 too, with no way to log in.
@@ -90,10 +122,13 @@ class ProductFormView( LoginRequiredMixin, UserPassesTestMixin, CreateView ):
     success_url = reverse_lazy('product_list')
 
     def test_func(self):
+        
         return self.request.user.is_staff
 
     def get_context_data(self, **kwargs):
+        
         context = super().get_context_data(**kwargs)
+        
         return context
 
 
@@ -106,14 +141,17 @@ class ProductListAPI( APIView ):
     def get(self, request, format=None):
         
         id  = request.query_params.get('id', None)
+        
         if id is not None:
             # get_object_or_404 raises Http404, which DRF renders as a clean 404.
             product = get_object_or_404(Product, pk=id)
             serializer = ProductSerializer(product)
+            
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         products = Product.objects.all().order_by('-created_at')
         serializer = ProductSerializer(products, many=True)
+        
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     def post(self, request, format=None):
@@ -125,21 +163,27 @@ class ProductListAPI( APIView ):
             serializer.save()
             
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     
     def patch(self, request, format=None):
+
         
         id = request.data.get('id', None)
         
         if id is None:
-            return Response({'error': 'Product ID is required for update.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Product ID is required for update.'}, 
+                            status=status.HTTP_400_BAD_REQUEST
+                            )
         
         product = get_object_or_404(Product, pk=id)
         serializer = ProductSerializer(product, data=request.data, partial=True)
         
         if serializer.is_valid():
+            
             serializer.save()
+            
             return Response(serializer.data, status=status.HTTP_200_OK)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -150,9 +194,14 @@ class ProductListAPI( APIView ):
         id = request.query_params.get('id', None)
         
         if id is None:
-            return Response({'error': 'Product ID is required for deletion.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'error': 'Product ID is required for deletion.'}, 
+                status=status.HTTP_400_BAD_REQUEST
+                )
         
         product = get_object_or_404(Product, pk=id)
         product.delete()
         
-        return Response({'message': 'Product deleted successfully.'}, status=status.HTTP_200_OK)
+        return Response({'message': 'Product deleted successfully.'}, 
+                        status=status.HTTP_200_OK
+                        )

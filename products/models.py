@@ -4,6 +4,7 @@ from django.utils.text import slugify
 # Create your models here.
 
 class Product(models.Model):
+    
     name = models.CharField(max_length=64 , verbose_name="Product Name") 
     description = models.TextField( max_length=255, verbose_name="Product Description")
     price = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="Product Price")
@@ -54,6 +55,7 @@ class Category(models.Model):
         return self.name
     
 class ProductImage(models.Model):
+    # TODO: add a product image path instead of a URL hotlink. 
     product = models.ForeignKey(Product, related_name='images', on_delete=models.CASCADE)
     image_url = models.URLField(max_length=200, verbose_name="Image URL")
     alt_text = models.CharField(max_length=100, blank=True, verbose_name="Alt Text")
