@@ -26,9 +26,6 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
-# All three come from .env at BASE_DIR. No secret is hardcoded here -- a missing
-# SECRET_KEY raises ImproperlyConfigured at startup rather than silently falling
-# back to a shared default.
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env('SECRET_KEY')
 
@@ -158,18 +155,11 @@ AUTH_USER_MODEL = 'users.CustomUser'
 
 LOGIN_URL = 'login'
 
-# ---------------------------------------------------------------------------
-# Basil -- the AI concierge (MASTER_SPEC.md / BASIL_LAYER.md)
-# ---------------------------------------------------------------------------
-# Every value comes from .env. No key is ever exposed to a template or to JS --
-# all model calls happen server-side.
-#
-# The .env key names differ from MASTER_SPEC 11 (BASI_API_KEY rather than
-# ANTHROPIC_API_KEY, BASIL_CNN rather than BASIL_MODEL_PATH). They are read as
-# they actually are rather than renaming the operator's file.
 
-# .strip() because the value in .env carries a trailing space, which would
-# otherwise be sent as part of the model id.
+# Basil -- the AI concierge  
+
+# Every value comes from .env. No key is ever exposed to a template or to JS  
+# all model calls happen server-side.
 BASIL_API_KEY = env('BASI_API_KEY', default='').strip()
 BASIL_LLM_MODEL = env('ANTHROPIC_MODEL', default='claude-haiku-4-5-20251001').strip()
 
@@ -177,26 +167,25 @@ BASIL_LLM_MODEL = env('ANTHROPIC_MODEL', default='claude-haiku-4-5-20251001').st
 # rejects it with a 400. Blank for a plain org key, which needs no header.
 BASIL_WORKSPACE_ID = env('ANTHROPIC_WORKSPACE_ID', default='').strip()
 
-# Vision. Path is relative to BASE_DIR; the 81 MB file is gitignored and is
-# downloaded from Hugging Face after cloning (see CLAUDE.md).
+# Vision. Path is relative to BASE_DIR; the 81 MB ONNX file is gitignored and is
 BASIL_MODEL_PATH = BASE_DIR / env('BASIL_CNN', default='ml/basil_effnetv2s.onnx').strip()
 BASIL_LABEL_MAP_PATH = BASE_DIR / 'ml' / 'label_map.json'
 
-# Below this top-1 confidence the classifier reports is_unknown (MASTER_SPEC 8.3).
+#  Food Threshold. Below this top-1 confidence the classifier reports is_unknown.
 BASIL_UNKNOWN_THRESHOLD = env.float('BASIL_UNKNOWN_THRESHOLD', default=0.60)
 
-# Hard cap on tool calls per user turn (MASTER_SPEC 5.3). Enforced in the agent
-# loop, not merely requested in the prompt.
+# Save tokens credits for each turn. Enforced in the agent loop, not merely
+# requested in the prompt.
 BASIL_MAX_TOOL_ITERATIONS = env.int('BASIL_MAX_TOOL_ITERATIONS', default=8)
 
-# Embeddings for the RAG corpus (Phase 6). The model id and its output dimension
+# Embeddings for the RAG corpus.The model id and its output dimension
 # are configurable because the dimension decides the pgvector column width and
 # must be confirmed against a real API response, not assumed.
 VOYAGE_API_KEY = env('VOYAGE_API_KEY', default='').strip()
 VOYAGE_MODEL = env('VOYAGE_MODEL', default='voyage-4-lite').strip()
 VOYAGE_DIM = env.int('VOYAGE_DIM', default=1024)
 
-# Uploaded chat images (MASTER_SPEC 8.2).
+# Uploaded chat images UI/UX.
 BASIL_UPLOAD_DIR = 'basil_uploads'
 BASIL_MAX_UPLOAD_BYTES = 5 * 1024 * 1024
 
