@@ -55,8 +55,8 @@ function initScrollReveal() {
  * they rot. On error we hide the broken <img> and reveal the local placeholder
  * that sits behind it, keeping the card's shape intact.
  */
-function initImageFallback() {
-  document.querySelectorAll('img[data-fallback]').forEach((img) => {
+export function initImageFallback(root = document) {
+  root.querySelectorAll('img[data-fallback]').forEach((img) => {
     const fail = () => {
       img.style.visibility = 'hidden';
       const frame = img.closest('.img-frame');

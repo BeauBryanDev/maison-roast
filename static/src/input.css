@@ -24,6 +24,13 @@
   h1, h2, h3 {
     @apply font-display;
   }
+
+  /* A display utility such as flex beats the browser's [hidden] rule, so an
+     element with both stays visible. This bit us once: the Basil drop overlay
+     shipped hidden + flex and covered the chat permanently. */
+  [hidden] {
+    display: none !important;
+  }
 }
 
 @layer components {
@@ -53,6 +60,16 @@
 
   .panel-dark {
     @apply rounded-2xl border border-gold/25 bg-roast text-crema shadow-xl;
+  }
+
+  /* The bar's welcome panel: the same shape as .panel-cream, in the evening
+     colour. Dark purple against the brown page is the "lights dimmed" moment
+     the copy describes. */
+  .panel-plum {
+    @apply rounded-3xl border border-gold/40 bg-plum text-crema shadow-2xl;
+    background-image:
+      radial-gradient(circle at 18% 18%, rgba(200, 162, 106, 0.14), transparent 48%),
+      radial-gradient(circle at 82% 78%, rgba(90, 44, 102, 0.55), transparent 55%);
   }
 
   /* Parchment tint for the light bands. Kept as a gradient rather than an image
@@ -116,6 +133,24 @@
   }
   .img-frame > .img-fallback {
     @apply absolute inset-0 flex items-center justify-center opacity-40;
+  }
+
+  /* Favourite toggle on a product card. The heart SVG is a single filled
+     artwork, so the two states are drawn with a filter rather than two files:
+     unpressed is desaturated and dimmed, pressed is the full gold heart. */
+  .btn-heart {
+    @apply absolute left-3 top-3 z-10 grid h-9 w-9 place-items-center rounded-full
+           bg-espresso/85 ring-1 ring-gold/40 transition
+           hover:scale-110 hover:ring-gold focus-visible:outline-none
+           focus-visible:ring-2 focus-visible:ring-gold;
+  }
+  .btn-heart > img {
+    @apply h-5 w-5 opacity-45 transition;
+    filter: grayscale(100%);
+  }
+  .btn-heart[aria-pressed='true'] > img {
+    @apply opacity-100;
+    filter: none;
   }
 }
 
