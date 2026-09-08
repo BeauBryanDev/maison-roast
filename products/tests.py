@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from .models import Category, Product
 from .test_utils import make_product
 from django.urls import reverse
+from users.test_utils import ADULT_DOB
 
 User = get_user_model()
 
@@ -155,10 +156,10 @@ class ProductAPISecurityTestCase(TestCase):
             price=10.00,
             stock=10,
         )
-        self.customer = User.objects.create_user(
+        self.customer = User.objects.create_user(gender='MALE', date_of_birth=ADULT_DOB, 
             username="customer", password="testpassword", email="customer@example.com",
         )
-        self.staff = User.objects.create_user(
+        self.staff = User.objects.create_user(gender='MALE', date_of_birth=ADULT_DOB, 
             username="shopowner", password="testpassword",
             email="owner@example.com", is_staff=True,
         )
@@ -205,10 +206,10 @@ class ProductAPISecurityTestCase(TestCase):
 
 class ProductAddViewPermissionTestCase(TestCase):
     def setUp(self):
-        self.customer = User.objects.create_user(
+        self.customer = User.objects.create_user(gender='MALE', date_of_birth=ADULT_DOB, 
             username="customer", password="testpassword", email="customer@example.com",
         )
-        self.staff = User.objects.create_user(
+        self.staff = User.objects.create_user(gender='MALE', date_of_birth=ADULT_DOB, 
             username="shopowner", password="testpassword",
             email="owner@example.com", is_staff=True,
         )
@@ -321,7 +322,7 @@ class ErrorPageTestCase(TestCase):
     def test_403_is_shown_to_a_signed_in_non_staff_user(self):
         """ProductFormView raises PermissionDenied for a customer. Anonymous
         visitors are redirected to login instead and never see this page."""
-        customer = User.objects.create_user(
+        customer = User.objects.create_user(gender='MALE', date_of_birth=ADULT_DOB, 
             username="nosy", password="testpassword", email="nosy@example.com")
         self.client.force_login(customer)
 

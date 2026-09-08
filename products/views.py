@@ -60,7 +60,8 @@ class FavouritesView(TemplateView):
     template_name = 'products/favourites.html'
     # TOdO: add a "favourites" field to the user profile, so logged-in users can
     # keep their favourites across devices. The localStorage version is still
-    # useful for anonymous visitors, and for logged-in users who don't want to log in just to browse the catalog.
+    # useful for anonymous visitors, and for logged-in users 
+    # who don't want to log in just to browse the catalog.
 
 class ProductListView(ListView):
     # The evening menu. Matched on the category name, like every other filter
@@ -113,7 +114,7 @@ class ProductDetailView(DetailView):
 class ProductFormView( LoginRequiredMixin, UserPassesTestMixin, CreateView ):
 
     # Adding to the catalog is a staff action [ admin / staff / superuser ].
-    # the right thing here: anonymous visitors are redirected to the login page,
+    # anonymous visitors are redirected to the login page,
     # while authenticated non-staff users get a 403. Setting raise_exception
     # would give anonymous users a 403 too, with no way to log in.
     model = Product

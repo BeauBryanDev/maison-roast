@@ -5,9 +5,7 @@
 
 {% comment %}
 Shell only. Favourites are ids in the visitor's localStorage, never in the
-database, so the server has nothing to render here -- favourites.js reads the
-store and fills the grid from /api/products/. The icon paths are handed over as
-data attributes because a JS module cannot resolve {% static %} itself.
+database, so the server has nothing to render here.
 {% endcomment %}
 
 {% block content %}

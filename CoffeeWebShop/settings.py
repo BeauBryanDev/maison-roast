@@ -156,7 +156,15 @@ AUTH_USER_MODEL = 'users.CustomUser'
 LOGIN_URL = 'login'
 
 
-# Basil -- the AI concierge  
+# Legal drinking age. Enforced in orders.services.place_order -- the one
+# chokepoint the web checkout and Basil's create_order tool share.
+MINIMUM_ALCOHOL_AGE = env.int('MINIMUM_ALCOHOL_AGE', default=18)
+
+# Age-restricted category, matched on name like every other filter here.
+ALCOHOL_CATEGORY_NAME = env('ALCOHOL_CATEGORY_NAME', default='Alcohol').strip()
+
+
+# Basil -- the AI concierge
 
 # Every value comes from .env. No key is ever exposed to a template or to JS  
 # all model calls happen server-side.

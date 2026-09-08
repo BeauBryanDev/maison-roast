@@ -9,7 +9,7 @@
 <section class="fade-in relative overflow-hidden rounded-3xl border border-gold/25">
     <img src="{% static 'images/brown_vintage.jpg' %}" alt=""
          class="absolute inset-0 h-full w-full object-cover" aria-hidden="true">
-    <div class="absolute inset-0 bg-gradient-to-r from-espresso via-espresso/80 to-espresso/30" aria-hidden="true"></div>
+    <div class="absolute inset-0 bg-gradient-to-r from-espresso via-espresso/80 to-espresso/20"></div>
 
     <div class="relative grid grid-cols-1 items-center gap-8 px-6 py-16 sm:px-10 lg:grid-cols-3 lg:py-24">
         <div class="lg:col-span-2">
@@ -26,12 +26,12 @@
         </div>
 
         <!-- Today's Special chalkboard -->
-        <div class="rounded-2xl border-4 border-roast-400 bg-espresso/80 p-6 text-center shadow-2xl backdrop-blur-sm">
+        <div class="rounded-2xl border-4 border-roast-400 bg-espresso/80 p-8 text-center shadow-2xl backdrop-blur-sm">
             <p class="font-script text-2xl text-gold-400">Today&rsquo;s Special</p>
             <p class="mx-auto my-3 h-px w-24 bg-gold/40"></p>
             {% if featured_products.0 %}
                 <p class="font-script text-3xl leading-snug text-crema">
-                    {{ featured_products.0.name }}
+                    {{ featured_products.45.name }}
                 </p>
                 <p class="mt-2 font-display text-xl text-terracotta-400">
                     ${{ featured_products.0.price }}
