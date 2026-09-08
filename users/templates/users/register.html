@@ -86,6 +86,31 @@
                 {{ form.address }}
             </div>
 
+            <div>
+                <label for="{{ form.date_of_birth.id_for_label }}"
+                       class="mb-2 block font-display text-sm uppercase tracking-widest text-roast/70">
+                    Date of Birth <span class="text-terracotta">*</span>
+                </label>
+                {{ form.date_of_birth }}
+                <p class="mt-2 text-xs text-roast/60">
+                    Required — we must verify your age before selling alcohol.
+                </p>
+            </div>
+
+            <fieldset>
+                <legend class="mb-2 block font-display text-sm uppercase tracking-widest text-roast/70">
+                    Gender <span class="text-terracotta">*</span>
+                </legend>
+                <div class="flex flex-wrap gap-4">
+                    {% for radio in form.gender %}
+                    <label class="flex items-center gap-2 text-sm text-roast">
+                        {{ radio.tag }}
+                        <span>{{ radio.choice_label }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </fieldset>
+
             <div class="sm:col-span-2">
                 <label for="{{ form.password1.id_for_label }}"
                        class="mb-2 block font-display text-sm uppercase tracking-widest text-roast/70">

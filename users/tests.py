@@ -1,3 +1,6 @@
+from datetime import date, timedelta
+from unittest.mock import patch
+
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
@@ -5,6 +8,7 @@ from .forms import CustomUserCreationForm
 
 from products.models import Product
 from orders.models import Order, ProductOrder
+from users.test_utils import ADULT_DOB, adult_dob, make_minor, make_user
 User = get_user_model()
 
 class UserAuthenticationTests(TestCase):
@@ -21,7 +25,7 @@ class UserAuthenticationTests(TestCase):
             'email': 'test@example.com',
             'password': 'testpassword123'
         }
-        self.user = User.objects.create_user(**self.user_data)
+        self.user = User.objects.create_user(gender='MALE', date_of_birth=ADULT_DOB, **self.user_data)
 
     def test_login_view_status(self):
         """Test that login page is accessible for unauthenticated users"""
@@ -86,7 +90,9 @@ class UserRegistrationTests(TestCase):
             'first_name': 'New',
             'last_name': 'User',
             'phone_number': '1234567890',
-            'address': '123 Test St'
+            'address': '123 Test St',
+            'gender': 'FEMALE',
+            'date_of_birth': '1995-04-17',
         }
         response = self.client.post(self.register_url, payload)
         
@@ -131,7 +137,7 @@ class AdminSmokeTestCase(TestCase):
     """
 
     def setUp(self):
-        self.superuser = User.objects.create_superuser(
+        self.superuser = User.objects.create_superuser(gender='MALE', date_of_birth=ADULT_DOB, 
             username="root", password="testpassword", email="root@example.com",
         )
         self.client.force_login(self.superuser)
@@ -160,7 +166,7 @@ class AdminSmokeTestCase(TestCase):
         """email is unique and non-blank; without it on the add form the second
         user created through the admin fails with an IntegrityError."""
         response = self.client.get("/admin/users/customuser/add/")
-        for field in ("email", "phone_number", "address"):
+        for field in ("email", "phone_number", "address", "gender", "date_of_birth"):
             with self.subTest(field=field):
                 self.assertContains(response, f'name="{field}"')
 
@@ -171,6 +177,8 @@ class AdminSmokeTestCase(TestCase):
                 "email": f"staffer{i}@example.com",
                 "password1": "Sup3r-Secret-Pw!",
                 "password2": "Sup3r-Secret-Pw!",
+                "gender": "MALE",
+                "date_of_birth": "1990-01-01",
             })
             self.assertIn(response.status_code, (200, 302))
 
@@ -202,12 +210,12 @@ class ProfileAPITestCase(TestCase):
     """
 
     def setUp(self):
-        self.user = User.objects.create_user(
+        self.user = User.objects.create_user(gender='MALE', date_of_birth=ADULT_DOB, 
             username="owner", password="Orig-Passw0rd!", email="owner@example.com",
             first_name="Ada", last_name="Lovelace",
             phone_number="0100", address="1 Old Street",
         )
-        self.other = User.objects.create_user(
+        self.other = User.objects.create_user(gender='MALE', date_of_birth=ADULT_DOB, 
             username="intruder", password="Other-Passw0rd!", email="other@example.com",
             first_name="Someone", last_name="Else",
         )
@@ -338,7 +346,7 @@ class ProfileAPITestCase(TestCase):
 
 class ProfilePageTestCase(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
+        self.user = User.objects.create_user(gender='MALE', date_of_birth=ADULT_DOB, 
             username="pageuser", password="testpassword", email="page@example.com")
         self.url = reverse("profile")
 
@@ -355,3 +363,151 @@ class ProfilePageTestCase(TestCase):
         self.assertContains(response, "pageuser")
         # CSRF token must be present or every fetch() 403s
         self.assertContains(response, "csrfmiddlewaretoken")
+
+
+class AgeComputationTestCase(TestCase):
+    """CustomUser.age -- the basis of the alcohol gate."""
+
+    def _user_born(self, dob, username="ageuser"):
+        return make_user(username=username, date_of_birth=dob)
+
+    def test_age_the_day_before_a_birthday(self):
+        today = date(2026, 9, 3)
+        user = self._user_born(date(2008, 9, 4))
+        with patch("users.models.date") as mock_date:
+            mock_date.today.return_value = today
+            self.assertEqual(user.age, 17)
+
+    def test_age_on_the_birthday(self):
+        today = date(2026, 9, 3)
+        user = self._user_born(date(2008, 9, 3))
+        with patch("users.models.date") as mock_date:
+            mock_date.today.return_value = today
+            self.assertEqual(user.age, 18)
+
+    def test_age_the_day_after_a_birthday(self):
+        today = date(2026, 9, 3)
+        user = self._user_born(date(2008, 9, 2))
+        with patch("users.models.date") as mock_date:
+            mock_date.today.return_value = today
+            self.assertEqual(user.age, 18)
+
+    def test_leap_day_birthday(self):
+        user = self._user_born(date(2008, 2, 29))
+        with patch("users.models.date") as mock_date:
+            mock_date.today.return_value = date(2026, 2, 28)
+            self.assertEqual(user.age, 17)
+            mock_date.today.return_value = date(2026, 3, 1)
+            self.assertEqual(user.age, 18)
+
+    def test_is_of_legal_age(self):
+        self.assertTrue(make_user(username="adult", date_of_birth=adult_dob()).is_of_legal_age())
+        self.assertFalse(make_minor().is_of_legal_age())
+
+    def test_cutoff_finds_minors_in_sql(self):
+        """legal_age_cutoff drives a date_of_birth query, no computed column."""
+        make_user(username="grown", date_of_birth=adult_dob())
+        minor = make_minor()
+        found = User.objects.filter(date_of_birth__gt=User.legal_age_cutoff())
+        self.assertEqual([u.pk for u in found], [minor.pk])
+
+
+class MandatorySignupFieldsTestCase(TestCase):
+    """gender and date_of_birth are required at registration."""
+
+    def setUp(self):
+        self.url = reverse("register")
+        self.payload = {
+            "username": "signup",
+            "email": "signup@example.com",
+            "password1": "newpassword123",
+            "password2": "newpassword123",
+            "gender": "FEMALE",
+            "date_of_birth": "1995-04-17",
+        }
+
+    def test_valid_signup_stores_both(self):
+        response = self.client.post(self.url, self.payload)
+        self.assertEqual(response.status_code, 302)
+        user = User.objects.get(username="signup")
+        self.assertEqual(user.gender, "FEMALE")
+        self.assertEqual(user.date_of_birth, date(1995, 4, 17))
+
+    def test_missing_gender_is_rejected(self):
+        self.payload.pop("gender")
+        response = self.client.post(self.url, self.payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(User.objects.filter(username="signup").exists())
+
+    def test_missing_date_of_birth_is_rejected(self):
+        self.payload.pop("date_of_birth")
+        response = self.client.post(self.url, self.payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(User.objects.filter(username="signup").exists())
+
+    def test_future_date_of_birth_is_rejected(self):
+        self.payload["date_of_birth"] = (date.today() + timedelta(days=1)).isoformat()
+        response = self.client.post(self.url, self.payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(User.objects.filter(username="signup").exists())
+
+    def test_absurd_date_of_birth_is_rejected(self):
+        self.payload["date_of_birth"] = "1820-01-01"
+        response = self.client.post(self.url, self.payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(User.objects.filter(username="signup").exists())
+
+    def test_invalid_gender_choice_is_rejected(self):
+        self.payload["gender"] = "ROBOT"
+        response = self.client.post(self.url, self.payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(User.objects.filter(username="signup").exists())
+
+    def test_register_page_renders_both_inputs(self):
+        response = self.client.get(self.url)
+        self.assertContains(response, 'name="gender"')
+        self.assertContains(response, 'type="date"')
+
+
+class ProfileImmutableFieldsTestCase(TestCase):
+    """gender and date_of_birth are read-only, like username and email."""
+
+    def setUp(self):
+        self.user = make_user(username="immutable", date_of_birth=date(1990, 1, 1))
+        self.client.force_login(self.user)
+        self.url = "/api/users/me/"
+
+    def test_get_exposes_them(self):
+        body = self.client.get(self.url).json()
+        self.assertEqual(body["gender"], "MALE")
+        self.assertEqual(body["date_of_birth"], "1990-01-01")
+        self.assertEqual(body["age"], self.user.age)
+
+    def test_patch_is_ignored(self):
+        response = self.client.patch(
+            self.url,
+            {"gender": "FEMALE", "date_of_birth": "2020-01-01"},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.gender, "MALE")
+        self.assertEqual(self.user.date_of_birth, date(1990, 1, 1))
+
+    def test_put_is_ignored(self):
+        response = self.client.put(
+            self.url,
+            {"first_name": "Ok", "gender": "OTHER", "date_of_birth": "2020-01-01"},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.first_name, "Ok")
+        self.assertEqual(self.user.gender, "MALE")
+        self.assertEqual(self.user.date_of_birth, date(1990, 1, 1))
+
+    def test_profile_page_shows_them_without_a_save_button(self):
+        response = self.client.get(reverse("profile"))
+        self.assertContains(response, "Male")
+        self.assertNotContains(response, 'data-patch="date_of_birth"')
+        self.assertNotContains(response, 'data-patch="gender"')

@@ -1,6 +1,10 @@
+from datetime import date
+
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from .models import CustomUser
+
+MAX_AGE = 120
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -51,9 +55,25 @@ class CustomUserCreationForm(UserCreationForm):
         })
     )
 
+    gender = forms.ChoiceField(
+        choices=CustomUser.Gender.choices,
+        required=True,
+        widget=forms.RadioSelect,
+    )
+
+    date_of_birth = forms.DateField(
+        required=True,
+        widget=forms.DateInput(attrs={
+            'type': 'date',
+            'class': 'field-cream',
+            'max': date.today().isoformat(),
+        }),
+    )
+
     class Meta:
         model = CustomUser
-        fields = ('username', 'email', 'first_name', 'last_name', 'phone_number', 'address', 'password1', 'password2')
+        fields = ('username', 'email', 'first_name', 'last_name', 'phone_number',
+                  'address', 'gender', 'date_of_birth', 'password1', 'password2')
         widgets = {
             'username': forms.TextInput(attrs={
                 'class': 'field-cream',
@@ -72,8 +92,18 @@ class CustomUserCreationForm(UserCreationForm):
             'placeholder': 'Confirm your password'
         })
 
+    def clean_date_of_birth(self):
+        """The browser's `max` is a hint; this is the check that counts."""
+        dob = self.cleaned_data['date_of_birth']
+        today = date.today()
+        if dob > today:
+            raise forms.ValidationError('Date of birth cannot be in the future.')
+        if dob.year < today.year - MAX_AGE:
+            raise forms.ValidationError('Please enter a valid date of birth.')
+        return dob
+
     def save(self, commit=True):
-        
+
         user = super().save(commit=False)
         user.email = self.cleaned_data['email']
         user.first_name = self.cleaned_data.get('first_name', '')
