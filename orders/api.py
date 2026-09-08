@@ -12,12 +12,13 @@ from .models import Order
 
 
 class OrderDeleteAPIView(APIView):
-    """DELETE /api/orders/<pk>/ -- the customer regrets the purchase.
+    """
+    DELETE /api/orders/<pk>/ -- the customer regrets the purchase.
 
     Soft delete: is_active=False, using the flag the project already treats as
     the visibility/soft-delete marker. MyOrderList and OrderDetail both filter
     is_active=True, so the order disappears from the customer's side while the
-    shop keeps the sales record.
+    shop keeps the sales record for traceability.
     """
 
     permission_classes = [IsAuthenticated]
@@ -37,6 +38,7 @@ class OrderDeleteAPIView(APIView):
             # CreateOrderProductView and carries the same race, so it is an F()
             # update inside the same transaction.
             for line in order.product_orders.all():
+                
                 Product.objects.filter(pk=line.product_id).update(
                     stock=F('stock') + line.quantity
                 )

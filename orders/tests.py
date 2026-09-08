@@ -9,12 +9,18 @@ from django.test.utils import CaptureQueriesContext
 from .views import MyOrderList
 from .models import Order, ProductOrder
 from products.models import Product
+from django.contrib.auth.models import AnonymousUser
+
+from basil.tools.create_order import create_order
+from products.test_utils import make_product
+from users.test_utils import ADULT_DOB, adult_dob, make_minor, make_user
+from .services import OrderError, is_age_restricted, place_order
 
 User = get_user_model()
 
 class OrderTestCase(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
+        self.user = User.objects.create_user(gender='MALE', date_of_birth=ADULT_DOB, 
             username="testuser_order",
             password="testpassword",
             email="test@example.com"
@@ -65,7 +71,7 @@ class OrderTestCase(TestCase):
 
 class MyOrderViewTestCase(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
+        self.user = User.objects.create_user(gender='MALE', date_of_birth=ADULT_DOB, 
             username="testuser",
             password="testpassword",
             email="user@test.com"
@@ -105,7 +111,7 @@ class OrderDetailQueryCountTestCase(TestCase):
     size of the order."""
 
     def setUp(self):
-        self.user = User.objects.create_user(
+        self.user = User.objects.create_user(gender='MALE', date_of_birth=ADULT_DOB, 
             username="shopper", password="testpassword", email="shopper@example.com",
         )
 
@@ -122,8 +128,7 @@ class OrderDetailQueryCountTestCase(TestCase):
                 name=f"{order_number} item {i}",
                 description="d",
                 price=1.00 + i,
-                stock=10,
-                category="c",
+                stock=10
             )
             ProductOrder.objects.create(
                 order=order, product=product, quantity=1, price_per_item=product.price,
@@ -160,7 +165,7 @@ class OrderMoneyTestCase(TestCase):
     """
 
     def setUp(self):
-        self.user = User.objects.create_user(
+        self.user = User.objects.create_user(gender='MALE', date_of_birth=ADULT_DOB, 
             username="accountant", password="testpassword", email="acc@example.com",
         )
         self.order = Order.objects.create(
@@ -168,9 +173,9 @@ class OrderMoneyTestCase(TestCase):
             customer_email="acc@example.com", is_active=True,
         )
         self.p1 = Product.objects.create(name="Money Latte", description="d",
-                                         price="2.99", stock=9, category="c")
+                                         price="2.99", stock=9)
         self.p2 = Product.objects.create(name="Money Tart", description="d",
-                                         price="5.90", stock=9, category="c")
+                                         price="5.90", stock=9)
         ProductOrder.objects.create(order=self.order, product=self.p1,
                                     quantity=2, price_per_item=self.p1.price)
         ProductOrder.objects.create(order=self.order, product=self.p2,
@@ -197,7 +202,7 @@ class OrderListQueryCountTestCase(TestCase):
     must prefetch or it costs a query per order."""
 
     def setUp(self):
-        self.user = User.objects.create_user(
+        self.user = User.objects.create_user(gender='MALE', date_of_birth=ADULT_DOB, 
             username="lister", password="testpassword", email="lister@example.com",
         )
 
@@ -210,7 +215,7 @@ class OrderListQueryCountTestCase(TestCase):
                 customer_email="lister@example.com", is_active=True,
             )
             product = Product.objects.create(name=f"Item {n}", description="d",
-                                             price=2, stock=5, category="c")
+                                             price=2, stock=5)
             ProductOrder.objects.create(order=order, product=product,
                                         quantity=1, price_per_item=product.price)
 
@@ -239,7 +244,7 @@ class CheckoutSecurityTestCase(TestCase):
     """
 
     def setUp(self):
-        self.user = User.objects.create_user(
+        self.user = User.objects.create_user(gender='MALE', date_of_birth=ADULT_DOB, 
             username="buyer",
             password="testpassword",
             email="buyer@example.com",
@@ -249,7 +254,6 @@ class CheckoutSecurityTestCase(TestCase):
             description="Test Description",
             price="2.99",
             stock=5,
-            category="Hot Coffee",
         )
         self.url = reverse("add_product_order")
 
@@ -329,7 +333,7 @@ class CheckoutSecurityTestCase(TestCase):
 
     def test_user_without_email_cannot_order(self):
         """No order may carry a placeholder address that looks contactable."""
-        emailless = User.objects.create_user(
+        emailless = User.objects.create_user(gender='MALE', date_of_birth=ADULT_DOB, 
             username="noemail", password="testpassword", email="",
         )
         self.client.force_login(emailless)
@@ -376,7 +380,7 @@ class CheckoutSecurityTestCase(TestCase):
         self.client.force_login(self.user)
 
         with patch(
-            "orders.views.ProductOrder.objects.create",
+            "orders.services.ProductOrder.objects.create",
             side_effect=RuntimeError("boom"),
         ):
             with self.assertRaises(RuntimeError):
@@ -398,12 +402,12 @@ class OrderDeleteAPITestCase(TestCase):
     """
 
     def setUp(self):
-        self.owner = User.objects.create_user(
+        self.owner = User.objects.create_user(gender='MALE', date_of_birth=ADULT_DOB, 
             username="regretful", password="testpassword", email="r@example.com")
-        self.other = User.objects.create_user(
+        self.other = User.objects.create_user(gender='MALE', date_of_birth=ADULT_DOB, 
             username="bystander", password="testpassword", email="b@example.com")
         self.product = Product.objects.create(
-            name="Regret Roast", description="d", price="4.00", stock=10, category="c")
+            name="Regret Roast", description="d", price="4.00", stock=10)
         self.url = reverse("add_product_order")
 
     def _buy(self, user, quantity=3):
@@ -476,3 +480,87 @@ class OrderDeleteAPITestCase(TestCase):
 
         response = self.client.get(reverse("order_details", args=[order.pk]))
         self.assertEqual(response.status_code, 404)
+
+
+class AlcoholAgeGateTestCase(TestCase):
+    """The gate lives in place_order, so both the web checkout and Basil's
+    create_order tool hit it. Each path is tested separately."""
+
+    def setUp(self):
+        self.wine = make_product(
+            "Alcohol", "Non-Coffee",
+            name="Cabernet Test", description="d", price=18.00, stock=5,
+        )
+        self.shake = make_product(
+            "Non-Coffee",
+            name="Vanilla Milkshake Test", description="d", price=4.50, stock=5,
+        )
+        self.adult = make_user(username="adult_buyer", date_of_birth=adult_dob())
+        self.minor = make_minor(username="minor_buyer")
+
+    # --- the service, shared by both callers ---
+
+    def test_minor_is_refused_alcohol(self):
+        with self.assertRaises(OrderError) as ctx:
+            place_order(user=self.minor, product_id=self.wine.pk, quantity=1)
+        self.assertIn("under 18", str(ctx.exception))
+
+    def test_refusal_does_not_touch_stock_or_create_an_order(self):
+        with self.assertRaises(OrderError):
+            place_order(user=self.minor, product_id=self.wine.pk, quantity=1)
+        self.wine.refresh_from_db()
+        self.assertEqual(self.wine.stock, 5)
+        self.assertEqual(Order.objects.count(), 0)
+
+    def test_adult_may_buy_alcohol(self):
+        order = place_order(user=self.adult, product_id=self.wine.pk, quantity=1)
+        self.assertEqual(order.product_orders.first().product, self.wine)
+        self.wine.refresh_from_db()
+        self.assertEqual(self.wine.stock, 4)
+
+    def test_the_gate_does_not_over_fire(self):
+        """A minor buying a milkshake must still succeed."""
+        order = place_order(user=self.minor, product_id=self.shake.pk, quantity=1)
+        self.assertEqual(order.product_orders.first().product, self.shake)
+
+    # --- the web checkout ---
+
+    def test_web_checkout_refuses_a_minor(self):
+        self.client.force_login(self.minor)
+        response = self.client.post(reverse("add_product_order"), {
+            "product": self.wine.pk, "quantity": 1,
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Order.objects.count(), 0)
+        self.wine.refresh_from_db()
+        self.assertEqual(self.wine.stock, 5)
+
+    def test_web_checkout_allows_an_adult(self):
+        self.client.force_login(self.adult)
+        response = self.client.post(reverse("add_product_order"), {
+            "product": self.wine.pk, "quantity": 1,
+        })
+        self.assertRedirects(response, reverse("order_list"))
+        self.assertEqual(Order.objects.count(), 1)
+
+    # --- Basil's tool ---
+
+    def test_create_order_tool_refuses_a_minor(self):
+        result = create_order(user=self.minor, product_id=self.wine.pk, quantity=1)
+        self.assertIn("error", result)
+        self.assertIn("under 18", result["error"])
+        self.assertEqual(Order.objects.count(), 0)
+
+    def test_create_order_tool_allows_an_adult(self):
+        result = create_order(user=self.adult, product_id=self.wine.pk, quantity=1)
+        self.assertNotIn("error", result)
+        self.assertEqual(Order.objects.count(), 1)
+
+    def test_anonymous_cannot_reach_the_gate_with_no_dob(self):
+        result = create_order(user=AnonymousUser(), product_id=self.wine.pk, quantity=1)
+        self.assertIn("error", result)
+        self.assertEqual(Order.objects.count(), 0)
+
+    def test_is_age_restricted_matches_on_category(self):
+        self.assertTrue(is_age_restricted(self.wine))
+        self.assertFalse(is_age_restricted(self.shake))

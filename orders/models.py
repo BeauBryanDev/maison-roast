@@ -3,9 +3,7 @@ from decimal import Decimal
 from django.db import models
 from django.conf import settings
 
-# Create your models here.
-
-#create Order model to store order details
+# create Order model to store order details
 class Order(models.Model):
     
     # optional link to the authenticated user who placed the order

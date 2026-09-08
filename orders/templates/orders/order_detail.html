@@ -6,7 +6,7 @@
 {% block content %}
 <div class="fade-in">
 
-    <!-- ==================== Breadcrumb ==================== -->
+    <!--  Breadcrumb  -->
     <nav class="mb-6 text-sm" aria-label="Breadcrumb">
         <ol class="flex flex-wrap items-center gap-2 text-crema/60">
             <li><a href="{% url 'home' %}" class="transition hover:text-gold-400">Home</a></li>
@@ -17,7 +17,7 @@
         </ol>
     </nav>
 
-    <!-- ==================== Header ==================== -->
+    <!--   Header   -->
     <header class="panel-dark flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
         <div class="min-w-0">
             <h1 class="truncate font-display text-2xl font-bold text-crema sm:text-3xl">
@@ -42,7 +42,7 @@
 
     <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
 
-        <!-- ==================== Line items ==================== -->
+        <!--   Line items   -->
         <section class="panel-dark overflow-hidden lg:col-span-2">
             <h2 class="border-b border-gold/20 px-6 py-4 font-display text-sm uppercase tracking-widest text-gold">
                 Items
@@ -67,7 +67,7 @@
                             <a href="{% url 'product_detail' line.product.slug %}"
                                class="transition hover:text-gold-400">{{ line.product.name }}</a>
                         </p>
-                        <p class="text-xs uppercase tracking-wider text-crema/50">{{ line.product.category }}</p>
+                        <p class="text-xs uppercase tracking-wider text-crema/50">{{ line.product.categories.all|join:", " }}</p>
                     </div>
 
                     <div class="shrink-0 text-right">
@@ -98,7 +98,7 @@
             {% endif %}
         </section>
 
-        <!-- ==================== Customer ==================== -->
+        <!--   Customer   -->
         <aside class="panel-cream paper h-fit p-6">
             <h2 class="font-display text-sm uppercase tracking-widest text-roast/70">Details</h2>
             <p class="heart-rule text-terracotta" aria-hidden="true">&#9825;</p>

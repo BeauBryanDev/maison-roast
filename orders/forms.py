@@ -19,6 +19,9 @@ class ProductOrderForm(ModelForm):
     def clean_quantity(self):
         # PositiveIntegerField permits 0, which would create an order for nothing.
         quantity = self.cleaned_data.get('quantity')
+        
         if quantity is not None and quantity < 1:
+            
             raise forms.ValidationError("Quantity must be at least 1.")
+        
         return quantity
