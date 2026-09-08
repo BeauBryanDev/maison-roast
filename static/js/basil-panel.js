@@ -1,10 +1,3 @@
-/**
- * Basil rail: open/close, persistence, and stretching the page when closed.
- *
- * This is the layout shell only. The agent itself (SSE streaming, tool calls,
- * image upload) is MASTER_SPEC.md §5/§10.3 work and arrives later as chat.js,
- * chat_stream.js and upload.js.
- */
 
 const STORAGE_KEY = 'maisonroast.basil-rail';
 

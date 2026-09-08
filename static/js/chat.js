@@ -27,7 +27,7 @@ if (rail && log && form && input) {
   let pending = null; // {imageId, url} waiting to ride along with the next message
   let busy = false;
 
-  // -- session id ----------------------------------------------------------
+  // session id  
 
   function readSession() {
     try {
@@ -53,7 +53,7 @@ if (rail && log && form && input) {
     } catch { /* ignore */ }
   }
 
-  // -- local cache of the transcript ---------------------------------------
+  //  local cache of the transcript  
   // The DB stays the source of truth. This only makes the rail redraw
   // instantly on a page change instead of blank until the fetch lands.
 
@@ -92,7 +92,7 @@ if (rail && log && form && input) {
     scrollToEnd();
   }
 
-  // -- rendering -----------------------------------------------------------
+  //   rendering  
 
   function scrollToEnd() {
     log.scrollTop = log.scrollHeight;
@@ -142,7 +142,7 @@ if (rail && log && form && input) {
     setStatus(value ? 'Thinking…' : 'Online');
   }
 
-  // -- the turn ------------------------------------------------------------
+  //  the turn 
 
   async function sendTurn(text, imageId, isRetry = false) {
     setBusy(true);
@@ -268,7 +268,7 @@ if (rail && log && form && input) {
     sendTurn(text, image ? image.imageId : '');
   });
 
-  // -- images --------------------------------------------------------------
+  //   images  
 
   function clearPending() {
     if (pending) URL.revokeObjectURL(pending.url);
