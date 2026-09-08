@@ -37,6 +37,13 @@ module.exports = {
           400: '#dcbd8f',
           600: '#a8834c',
         },
+        // Evening-only. The bar page after 18:00 -- used nowhere else, so the
+        // daytime site stays the five roles above.
+        plum: {
+          DEFAULT: '#33163d',   // the bar's welcome panel
+          800: '#24102b',
+          400: '#5a2c66',
+        },
       },
       fontFamily: {
         display: ['"Playfair Display"', 'Georgia', 'Cambria', 'serif'],

@@ -1,0 +1,86 @@
+{% comment %}
+Deliberately standalone: Django renders 500.html with an EMPTY context -- no
+request, no user, no context processors -- so extending base.html would fail on
+the nav's user.is_authenticated and the Basil rail's csrf_token.
+
+The styling is inline for the same reason. This page is shown when something is
+already broken, which may well be static file serving or the database, so it
+must not depend on main.css or on a webfont. The palette is the same
+tailwind.config.js one, written out by hand.
+{% endcomment %}<style>
+    body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #1a1108;
+        color: #f2e4cc;
+        font-family: Lato, system-ui, -apple-system, "Segoe UI", sans-serif;
+        text-align: center;
+        padding: 2rem 1.25rem;
+        box-sizing: border-box;
+    }
+    .card {
+        max-width: 34rem;
+        border: 1px solid rgba(200, 162, 106, .35);
+        border-radius: 1.25rem;
+        background: #241708;
+        padding: 3rem 2rem;
+    }
+    .rule {
+        color: #c0622c;
+        letter-spacing: .3em;
+        text-transform: uppercase;
+        font-size: .75rem;
+        margin: 0 0 1.5rem;
+    }
+    .code {
+        font-family: "Playfair Display", Georgia, Cambria, serif;
+        font-size: 4.5rem;
+        font-weight: 700;
+        line-height: 1;
+        color: #dcbd8f;
+        margin: 0;
+    }
+    h1 {
+        font-family: "Playfair Display", Georgia, Cambria, serif;
+        font-size: 1.75rem;
+        margin: 1.5rem 0 .5rem;
+        color: #f2e4cc;
+    }
+    p.lead {
+        color: rgba(242, 228, 204, .85);
+        line-height: 1.7;
+        margin: 0 0 2rem;
+    }
+    a {
+        display: inline-block;
+        background: #c0622c;
+        color: #f8f1e3;
+        text-decoration: none;
+        padding: .75rem 1.75rem;
+        border-radius: .5rem;
+        font-weight: 700;
+        letter-spacing: .05em;
+        text-transform: uppercase;
+        font-size: .875rem;
+    }
+    a:hover { background: #a8531f; }
+    .mark { color: #c8a26a; font-size: 1.5rem; margin-top: 2rem; }
+</style>
+
+<div class="card">
+    <p class="rule">Error 500</p>
+    <p class="code">500</p>
+
+    <h1>Something boiled over</h1>
+    <p class="lead">
+        That one is on us, not on you. Our team has been notified and is
+        looking into it. Give it a moment and try again.
+    </p>
+
+    <a href="/">Back to Home</a>
+
+    <p class="mark">&#10086;</p>
+</div>

@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Not Allowed — Maison Roast{% endblock %}
+
+{% block content %}
+
+<section class="reveal relative overflow-hidden rounded-3xl border border-gold/25">
+    <img src="{% static 'images/brown_vintage.jpg' %}" alt=""
+         class="absolute inset-0 h-full w-full object-cover opacity-40" aria-hidden="true">
+    <div class="absolute inset-0 bg-gradient-to-r from-espresso via-espresso/85 to-espresso/60" aria-hidden="true"></div>
+
+    <div class="relative px-6 py-16 text-center sm:px-10 lg:py-24">
+        <p class="filigree text-sm text-terracotta-400">Error 403</p>
+
+        <p class="mt-6 font-display text-7xl font-bold leading-none text-gold-400 sm:text-8xl">403</p>
+
+        <h1 class="mt-6 font-display text-3xl font-bold leading-tight text-crema sm:text-4xl">
+            Staff only,
+        </h1>
+        <p class="font-script text-4xl text-gold-400 sm:text-5xl">
+            behind this door <span class="text-terracotta-400" aria-hidden="true">&#9825;</span>
+        </p>
+
+        {% comment %}
+        Anonymous visitors are redirected to login by AccessMixin and never reach
+        here, so whoever sees this page is signed in and simply lacks the
+        permission. Telling them to log in would be a dead end.
+        {% endcomment %}
+        <p class="mx-auto mt-8 max-w-xl text-base leading-relaxed text-crema/85">
+            {% if user.is_authenticated %}
+            You&rsquo;re signed in as <span class="text-gold-400">{{ user.username }}</span>,
+            but this part of the shop is reserved for staff. If that seems wrong,
+            ask the shop owner to update your account.
+            {% else %}
+            This part of the shop isn&rsquo;t open to visitors.
+            {% endif %}
+        </p>
+
+        <div class="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <a href="{% url 'home' %}" class="btn-terracotta">Back to Home</a>
+            <a href="{% url 'product_list' %}" class="btn-ghost">Browse the Menu</a>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Page Not Found — Maison Roast{% endblock %}
+
+{% block content %}
+
+<section class="reveal relative overflow-hidden rounded-3xl border border-gold/25">
+    <img src="{% static 'images/brown_vintage.jpg' %}" alt=""
+         class="absolute inset-0 h-full w-full object-cover opacity-40" aria-hidden="true">
+    <div class="absolute inset-0 bg-gradient-to-r from-espresso via-espresso/85 to-espresso/60" aria-hidden="true"></div>
+
+    <div class="relative px-6 py-16 text-center sm:px-10 lg:py-24">
+        <p class="filigree text-sm text-terracotta-400">Error 404</p>
+
+        <p class="mt-6 font-display text-7xl font-bold leading-none text-gold-400 sm:text-8xl">404</p>
+
+        <h1 class="mt-6 font-display text-3xl font-bold leading-tight text-crema sm:text-4xl">
+            This page has left
+        </h1>
+        <p class="font-script text-4xl text-gold-400 sm:text-5xl">
+            the counter <span class="text-terracotta-400" aria-hidden="true">&#9825;</span>
+        </p>
+
+        <p class="mx-auto mt-8 max-w-xl text-base leading-relaxed text-crema/85">
+            We looked everywhere &mdash; behind the espresso machine, under the pastry
+            case. Whatever you were after isn&rsquo;t here. It may have moved, or the
+            link may have a typo in it.
+        </p>
+
+        <div class="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <a href="{% url 'home' %}" class="btn-terracotta">Back to Home</a>
+            <a href="{% url 'product_list' %}" class="btn-ghost">Browse the Menu</a>
+        </div>
+    </div>
+</section>
+
+<section class="reveal panel-cream paper mt-10 px-6 py-12 text-center sm:px-10">
+    <p class="filigree text-sm text-terracotta">Try one of these</p>
+
+    <div class="mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-3">
+        <a href="{% url 'product_list' %}"
+           class="rounded-xl border border-gold/40 px-4 py-5 transition hover:border-terracotta hover:bg-crema-200/40">
+            <p class="font-display text-lg font-bold uppercase tracking-widest text-espresso">Menu</p>
+            <p class="mt-1 text-sm text-roast/70">Everything we are serving today.</p>
+        </a>
+        <a href="{% url 'about' %}"
+           class="rounded-xl border border-gold/40 px-4 py-5 transition hover:border-terracotta hover:bg-crema-200/40">
+            <p class="font-display text-lg font-bold uppercase tracking-widest text-espresso">Our Story</p>
+            <p class="mt-1 text-sm text-roast/70">How Maison Roast came to be.</p>
+        </a>
+        {% if user.is_authenticated %}
+        <a href="{% url 'order_list' %}"
+           class="rounded-xl border border-gold/40 px-4 py-5 transition hover:border-terracotta hover:bg-crema-200/40">
+            <p class="font-display text-lg font-bold uppercase tracking-widest text-espresso">My Orders</p>
+            <p class="mt-1 text-sm text-roast/70">What you have ordered before.</p>
+        </a>
+        {% else %}
+        <a href="{% url 'login' %}"
+           class="rounded-xl border border-gold/40 px-4 py-5 transition hover:border-terracotta hover:bg-crema-200/40">
+            <p class="font-display text-lg font-bold uppercase tracking-widest text-espresso">Sign In</p>
+            <p class="mt-1 text-sm text-roast/70">Pick up where you left off.</p>
+        </a>
+        {% endif %}
+    </div>
+
+    <p class="mt-8 text-sm text-roast/70">
+        Still stuck? Basil is in the corner of the page &mdash; just ask.
+    </p>
+</section>
+
+{% endblock %}
