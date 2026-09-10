@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.db import connection
@@ -482,9 +482,13 @@ class OrderDeleteAPITestCase(TestCase):
         self.assertEqual(response.status_code, 404)
 
 
+@override_settings(ALCOHOL_SERVICE_START_HOUR=0)
 class AlcoholAgeGateTestCase(TestCase):
     """The gate lives in place_order, so both the web checkout and Basil's
-    create_order tool hit it. Each path is tested separately."""
+    create_order tool hit it. Each path is tested separately.
+
+    The bar is forced open (hour 0) so these assert the age gate alone --
+    otherwise they'd pass or fail on the wall clock."""
 
     def setUp(self):
         self.wine = make_product(

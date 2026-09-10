@@ -163,12 +163,15 @@ MINIMUM_ALCOHOL_AGE = env.int('MINIMUM_ALCOHOL_AGE', default=18)
 # Age-restricted category, matched on name like every other filter here.
 ALCOHOL_CATEGORY_NAME = env('ALCOHOL_CATEGORY_NAME', default='Alcohol').strip()
 
+# Alcohol is served evenings only. Checked by basil.tools.check_compliance.
+ALCOHOL_SERVICE_START_HOUR = env.int('ALCOHOL_SERVICE_START_HOUR', default=18)
+
 
 # Basil -- the AI concierge
 
 # Every value comes from .env. No key is ever exposed to a template or to JS  
 # all model calls happen server-side.
-BASIL_API_KEY = env('BASI_API_KEY', default='').strip()
+BASIL_API_KEY = env('BASIL_API_KEY', default='').strip()
 BASIL_LLM_MODEL = env('ANTHROPIC_MODEL', default='claude-haiku-4-5-20251001').strip()
 
 # Identity-linked keys must name the workspace the request acts in, or the API

@@ -5,6 +5,7 @@ from datetime import datetime
 from django.conf import settings
 from django.db import transaction
 from django.db.models import F
+from django.utils import timezone
 
 from products.models import Product
 
@@ -22,8 +23,15 @@ def is_age_restricted(product):
     ).exists()
 
 
+def is_within_service_hours():
+    """True once the bar opens. Evenings only, per ALCOHOL_SERVICE_START_HOUR."""
+    return timezone.localtime().hour >= settings.ALCOHOL_SERVICE_START_HOUR
+
+
 def generate_order_number():
+    
     stamp = datetime.now().strftime('%Y%m%d%H%M%S')
+    
     return f'ORD-{stamp}-{str(uuid.uuid4())[:8].upper()}'
 
 
@@ -58,14 +66,26 @@ def place_order(user, product_id, quantity):
         # Age gate. Here, not in the view or the prompt: this is the one path
         # both the web checkout and Basil's create_order tool go through, so
         # neither can bypass it. Runs before stock is touched.
-        if is_age_restricted(product) and not (
-            getattr(user, 'is_of_legal_age', None) and user.is_of_legal_age()
-        ):
-            raise OrderError(
-                f'We cannot sell alcohol to anyone under '
-                f'{settings.MINIMUM_ALCOHOL_AGE}. Please choose something else '
-                f'from the menu.'
-            )
+        if is_age_restricted(product):
+            
+            if not (getattr(user, 'is_of_legal_age', None)
+                    
+                    and user.is_of_legal_age()):
+                raise OrderError(
+                    f'We cannot sell alcohol to anyone under '
+                    f'{settings.MINIMUM_ALCOHOL_AGE}. Please choose something else '
+                    f'from the menu.'
+                )
+
+            # Service-hours gate, same placement and same reasoning as the age
+            # one. basil.tools.check_compliance reports it ahead of time, but
+            # that tool is advisory -- this is what binds.
+            if not is_within_service_hours():
+                raise OrderError(
+                    f'We do not serve alcohol before '
+                    f'{settings.ALCOHOL_SERVICE_START_HOUR}:00. Please come '
+                    f'back this evening.'
+                )
 
         if product.stock < quantity:
             raise OrderError(

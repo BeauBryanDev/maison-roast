@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      # pgvector, not plain postgres:15 -- basil's migrations create a
+      # VectorField and an HNSW index, which need the extension present.
+      postgres:
+        image: pgvector/pgvector:pg15
+        env:
+          POSTGRES_DB: coffee_shop_db
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      # settings.py reads .env, but django-environ falls back to the real
+      # environment, so CI passes these directly and never writes a file.
+      SECRET_KEY: ci-not-a-real-secret-key
+      DEBUG: 'False'
+      ALLOWED_HOSTS: localhost,127.0.0.1
+      # The service maps to 5432 on the runner, not the 5433 used locally.
+      # The test runner needs CREATEDB, which the superuser role has.
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/coffee_shop_db
+      # No API keys. Every test mocks the Anthropic and Voyage clients, and the
+      # vision tests skip themselves when the gitignored .onnx file is absent.
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Check for missing migrations
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Django system checks
+        run: python manage.py check
+
+      - name: Run tests
+        run: python manage.py test --verbosity 2
+
+  frontend:
+    # The CSS is compiled, not served from a CDN, so a build that no longer
+    # runs breaks every page. Independent of the tests, so both report.
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build CSS
+        run: npm run build
