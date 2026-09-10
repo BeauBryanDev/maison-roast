@@ -1,4 +1,5 @@
 
+
 import pathlib
 import re
 import time
@@ -37,7 +38,9 @@ def count_tokens(text, client=None):
     if client is not None and not _tokenizer_failed:
         
         try:
-            return len(client.tokenize([text], model=settings.VOYAGE_MODEL)[0])
+            return len(client.tokenize([text],
+                        model=settings.VOYAGE_MODEL)[0]
+                       )
         
         except Exception:
             
@@ -50,8 +53,7 @@ def split_documents(text):
     """
     Split a markdown file into individual documents based on H1 headings.
     Maison_Roast_Story_Telling.md is five: the story, refund, delivery,
-    allergens and the social description. Treating the file as one document
-    would label a refund answer with the story's title.
+    allergens and the social description.
     """
     parts = re.split(r'(?m)^#\s+(.+)$', text)
     preamble = parts[0].strip()
@@ -59,6 +61,7 @@ def split_documents(text):
     documents = []
     
     if preamble:
+        
         documents.append(('', preamble))
         
     for i in range(1, len(parts), 2):
@@ -116,12 +119,14 @@ def split_table(block, client):
         row_tokens = count_tokens(row, client)
         
         if current and current_tokens + row_tokens > MAX_CHUNK_TOKENS:
-            
+
             pieces.append('\n'.join([header, separator, *current]))
             current = []
             current_tokens = header_tokens
-            continue
-        
+            # No continue: this row starts the next piece rather than being
+            # dropped with the boundary. A silently missing allergen row is
+            # exactly the failure this function exists to prevent.
+
         current.append(row)
         current_tokens += row_tokens
 
@@ -225,6 +230,7 @@ def embed_with_retry(client, texts, on_wait=None):
         try:
             return client.embed(texts, model=settings.VOYAGE_MODEL,
                                 input_type='document')
+            
         except voyageai.error.RateLimitError:
             if attempt == MAX_RETRIES - 1:
                 raise
@@ -344,7 +350,7 @@ class Command(BaseCommand):
         # They would still be retrievable, quoting text no document contains.
         stale = 0
         for source in {c['source'] for c in chunks}:
-            
+                
             highest = max(c['chunk_index'] for c in chunks if c['source'] == source)
             
             removed, _ = KnowledgeDocument.objects.filter(
