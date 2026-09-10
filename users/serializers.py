@@ -2,7 +2,6 @@ from rest_framework import serializers
 
 from .models import CustomUser
 
-
 class UserProfileSerializer(serializers.ModelSerializer):
     """The account as its owner sees it.
 
