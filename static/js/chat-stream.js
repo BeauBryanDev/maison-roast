@@ -1,10 +1,3 @@
-/**
- * SSE client for POST /basil/chat/.
- *
- * EventSource cannot be used: it only issues GET and cannot send the CSRF
- * header, and the chat endpoint is a POST. So the SSE frames are parsed off
- * the fetch body reader by hand.
- */
 
 import { csrfToken } from './api.js';
 
