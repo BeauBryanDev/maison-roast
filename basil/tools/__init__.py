@@ -9,6 +9,7 @@ from .knowledge import search_knowledge_base
 from .menu import check_product_availability, get_product_details, search_menu
 from .read_orders import read_orders
 from .vision import vision_identify
+from .check_nutrition_info import get_nutrition_info
 
 import logging
 
@@ -140,6 +141,23 @@ TOOL_SCHEMAS = [
             'properties': {'limit': {'type': 'integer'}},
         },
     },
+    {
+        'name': 'get_nutrition_info',
+        'description': (
+            'Calories, protein, carbs and fat for a menu item, reported per '
+            '100g. Use when a customer asks about calories, macros, or '
+            'nutrition -- never estimate these yourself. If nothing is on '
+            'file, say so rather than guessing a number.'
+        ),
+        'input_schema': {
+            'type': 'object',
+            'properties': {
+                'product_id': {'type': 'integer'},
+                'product_name': {'type': 'string'},
+            },
+        },
+    },
+    
 ]
 
 # tools dictionary
@@ -152,6 +170,7 @@ _HANDLERS = {
     'read_orders': read_orders,
     'vision_identify': vision_identify,
     'search_knowledge_base': search_knowledge_base,
+    "get_nutrition_info": get_nutrition_info,
 }
 
 
