@@ -6,7 +6,7 @@
  * so a price change or a sold-out item shows the truth rather than a snapshot
  * taken when the heart was clicked.
  *
- * Every localStorage access is wrapped -- it throws in private windows.
+ * Every localStorage access is wrapped -- > it throws in private windows.
  */
 
 import { initImageFallback } from './main.js';
@@ -84,9 +84,7 @@ export function wireHearts(root = document) {
   });
 }
 
-/* ------------------------------------------------------------------ *
- * The favourites page                                                 *
- * ------------------------------------------------------------------ */
+// The favourites page .
 
 function esc(value) {
   const div = document.createElement('div');

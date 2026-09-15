@@ -4,6 +4,7 @@
 
 import { streamChat } from './chat-stream.js';
 import { uploadImage, describeRejection } from './upload.js';
+import { renderMarkdown } from './markdown.js';
 
 const SESSION_KEY = 'basil.session';
 const LOG_KEY = 'basil.log';
@@ -87,7 +88,11 @@ if (rail && log && form && input) {
       // A blob: URL from this tab dies on navigation, so only a real path
       // from the server is worth redrawing.
       if (message.image_url) thumbnail(message.image_url);
-      if (message.text) bubble(message.role).textContent = message.text;
+      if (!message.text) continue;
+      const el = bubble(message.role);
+      // Only Basil writes markdown; a customer's own asterisks stay literal.
+      if (message.role === 'user') el.textContent = message.text;
+      else renderMarkdown(el, message.text);
     }
     scrollToEnd();
   }
@@ -149,23 +154,38 @@ if (rail && log && form && input) {
 
     let reply = null;
     let failed = null;
+    // The bubble holds elements once rendered, so its textContent is no longer
+    // the raw reply -- keep the markdown source here and re-render each token.
+    let replyText = '';
 
     await streamChat({
       message: text,
       sessionId,
       imageId,
       onEvent(event, data) {
+
         if (event === 'session') {
           writeSession(data.session_id);
+
         } else if (event === 'token') {
+
           if (!reply) reply = bubble('assistant');
-          reply.textContent += data.text;
+          replyText += data.text;
+
+          renderMarkdown(reply, replyText);
+
           scrollToEnd();
+
         } else if (event === 'tool_start') {
+
           setStatus(toolLabel(data.name));
+
         } else if (event === 'tool_end') {
+
           setStatus('Thinking…');
+
         } else if (event === 'error') {
+          
           failed = data.message;
         }
       },
@@ -178,7 +198,9 @@ if (rail && log && form && input) {
       return sendTurn(text, imageId, true);
     }
 
-    if (reply) remember({ role: 'assistant', text: reply.textContent });
+    // Cache the markdown source, not the rendered text, so a redraw from
+    // cache formats identically to the server's replay.
+    if (reply) remember({ role: 'assistant', text: replyText });
     if (failed) note(failed, 'error');
     setBusy(false);
     input.focus();
@@ -197,7 +219,7 @@ if (rail && log && form && input) {
     return labels[name] || 'One sec…';
   }
 
-  // -- restoring the conversation ------------------------------------------
+  // RESTOES THE CONVERSATION .
 
   async function restore() {
     // Two layers, on purpose. localStorage paints the transcript immediately

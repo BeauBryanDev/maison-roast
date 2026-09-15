@@ -9,7 +9,7 @@ import { request } from './api.js';
 
 const EDITABLE = ['first_name', 'last_name', 'phone_number', 'address'];
 
-/* --------------------------------------------------------------- helpers -- */
+// Helpers for the profile page .
 
 function showStatus(el, message, ok) {
   el.textContent = message;
@@ -46,8 +46,7 @@ function readProfileForm(form) {
   });
   return payload;
 }
-
-/* --------------------------------------------------------------- profile -- */
+//  profile .
 
 function initProfileForm() {
   const form = document.getElementById('profile-form');
@@ -87,7 +86,7 @@ function initProfileForm() {
   });
 }
 
-/* -------------------------------------------------------------- password -- */
+// Password change .
 
 function initPasswordForm() {
   const form = document.getElementById('password-form');
@@ -116,7 +115,7 @@ function initPasswordForm() {
   });
 }
 
-/* ------------------------------------------------------------ deactivate -- */
+// Account deactivation .
 
 function initDeleteForm() {
   const form = document.getElementById('delete-form');
@@ -146,8 +145,8 @@ function initDeleteForm() {
   });
 }
 
-/* ------------------------------------------------------------------ init -- */
-
+// The page .
+// Init all the forms, then wire the buttons to the handlers.
 function init() {
   initProfileForm();
   initPasswordForm();

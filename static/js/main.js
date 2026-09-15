@@ -1,11 +1,8 @@
 /**
  * Site-wide behaviour: mobile navigation, scroll reveal, product-image fallback.
  *
- * Vanilla ES module, no framework -- MASTER_SPEC.md §3 rules out React, Vue,
- * Alpine and HTMX for this project.
+ * Vanilla ES module, no framework .
  */
-
-/* ------------------------------------------------------------------ nav ---- */
 
 function initMobileNav() {
   const toggle = document.getElementById('nav-toggle');
@@ -20,7 +17,6 @@ function initMobileNav() {
   });
 }
 
-/* --------------------------------------------------------------- reveal ---- */
 
 function initScrollReveal() {
   const targets = document.querySelectorAll('.reveal');
@@ -48,8 +44,6 @@ function initScrollReveal() {
   targets.forEach((el) => observer.observe(el));
 }
 
-/* ------------------------------------------------------- image fallback ---- */
-
 /**
  * Product images are external URLs (Product.product_image is a URLField), so
  * they rot. On error we hide the broken <img> and reveal the local placeholder
@@ -70,7 +64,6 @@ export function initImageFallback(root = document) {
   });
 }
 
-/* ----------------------------------------------------------------- init ---- */
 
 function init() {
   initMobileNav();

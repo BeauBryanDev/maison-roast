@@ -3,7 +3,7 @@
  *
  * The API uses DRF's SessionAuthentication, which enforces CSRF on every unsafe
  * method. Miss the X-CSRFToken header and the request comes back as a 403 that
- * looks nothing like a CSRF problem -- so it is centralised here.
+ * looks nothing like a CSRF problem , so it is centralised here.
  */
 
 export function csrfToken() {
@@ -41,8 +41,8 @@ export async function request(url, method, body) {
     try {
       data = await response.json();
     } catch {
-      data = {}; // non-JSON error page; the status still tells us what happened
-    }
+      data = {}; // non-JSON error page; 
+    }     // the status still tells us what happened
   }
 
   return { ok: response.ok, status: response.status, data };

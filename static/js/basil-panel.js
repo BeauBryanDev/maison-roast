@@ -29,9 +29,7 @@ function apply(state) {
   const closed = state === 'closed';
   document.body.dataset.rail = closed ? 'closed' : 'open';
 
-  // The rail is `hidden lg:flex` in markup: removing it from the flex row is
-  // what lets <main> (flex-1) stretch to the full width. Toggling a class
-  // rather than style.display keeps the lg: breakpoint behaviour intact.
+ 
   rail.classList.toggle('lg:flex', !closed);
   rail.classList.toggle('lg:hidden', closed);
   reopen.hidden = !closed;
@@ -47,7 +45,7 @@ function init() {
   closeBtn.addEventListener('click', () => {
     apply('closed');
     writeState('closed');
-    openBtn.focus(); // keep keyboard users somewhere sensible
+    openBtn.focus();  
   });
 
   openBtn.addEventListener('click', () => {
