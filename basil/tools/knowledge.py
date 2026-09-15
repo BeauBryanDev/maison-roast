@@ -35,5 +35,12 @@ def search_knowledge_base(query, top_k=DEFAULT_TOP_K):
         return {'error': f'Knowledge lookup failed: {exc}'}
 
     payload = {'count': len(results), 'results': results}
-    
+
+    if not results:
+        # Say "found nothing" explicitly. A bare empty list reads to the model
+        # as "the shop has no such policy" -- same failure the rate-limit
+        # branch above guards against.
+        payload['note'] = ('Nothing in the knowledge base matched. Say you '
+                           'could not find it rather than inventing an answer.')
+
     return payload

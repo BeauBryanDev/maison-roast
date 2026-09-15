@@ -145,7 +145,7 @@ class SearchKnowledgeBaseToolTestCase(TestCase):
     def test_it_is_a_registered_tool(self):
         names = [t['name'] for t in TOOL_SCHEMAS]
         self.assertIn('search_knowledge_base', names)
-        self.assertEqual(len(names), 8)
+        self.assertEqual(len(names), 9)
 
     def test_it_returns_passages(self):
         with patch.object(knowledge_tool, 'search', return_value=self._hits()):
