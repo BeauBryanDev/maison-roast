@@ -22,9 +22,8 @@
         <!--  Image  -->
         <div class="panel-dark overflow-hidden p-0">
             <div class="img-frame" style="aspect-ratio: 1 / 1;">
-                {# TODO: swap product.product_image (external URL) for a local static image. #}
                 {% if product.product_image %}
-                <img src="{{ product.product_image }}" alt="{{ product.name }}" data-fallback>
+                <img src="{{ product.product_image.url }}" alt="{{ product.name }}" data-fallback>
                 {% endif %}
                 <span class="img-fallback" {% if product.product_image %}hidden{% endif %}>
                     <img src="{% static 'icons/coffee_pot.svg' %}" alt="" class="h-28 w-28" aria-hidden="true">

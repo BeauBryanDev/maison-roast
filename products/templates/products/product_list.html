@@ -43,10 +43,8 @@
                         aria-pressed="false" aria-label="Save {{ product.name }} to my favourites">
                     <img src="{% static 'icons/heart_icon.svg' %}" alt="" aria-hidden="true">
                 </button>
-
-                {# TODO: swap product.product_image (external URL) for a local static image. #}
                 {% if product.product_image %}
-                <img src="{{ product.product_image }}" alt="{{ product.name }}"
+                <img src="{{ product.product_image.url }}" alt="{{ product.name }}"
                      loading="lazy" data-fallback>
                 {% endif %}
                 <span class="img-fallback" {% if product.product_image %}hidden{% endif %}>

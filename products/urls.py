@@ -15,3 +15,10 @@ urlpatterns = [
     path('api/products/', ProductListAPI.as_view(), name='product_list_api'),
     
 ]
+
+
+
+
+
+
+

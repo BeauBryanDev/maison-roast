@@ -34,5 +34,5 @@ def create_order(user,
         'order_number': order.order_number,
         'status': 'pending',
         'total': str(order.total),
-        'checkout_url': reverse('order_details', args=[order.pk]),
+        'checkout_url': reverse('start_checkout', args=[order.id]),
     }

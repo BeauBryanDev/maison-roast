@@ -136,4 +136,17 @@
     Thank you for being part of our story.
 </p>
 
+<section class="mt-12 text-center reveal" aria-labelledby="stack-heading">
+    <p id="stack-heading" class="filigree text-sm text-terracotta-400">Crafted With</p>
+    <ul class="mt-6 flex flex-wrap items-center justify-center gap-x-10 gap-y-6">
+        {% for name, icon in tech_stack %}
+        <li class="flex flex-col items-center gap-2">
+            <img src="{% static icon %}" alt="{{ name }}" title="{{ name }}"
+                 class="h-10 w-10 object-contain opacity-80 transition hover:opacity-100" loading="lazy">
+            <span class="font-display text-[11px] uppercase tracking-widest text-crema/60">{{ name }}</span>
+        </li>
+        {% endfor %}
+    </ul>
+</section>
+
 {% endblock %}

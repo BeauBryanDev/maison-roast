@@ -15,10 +15,10 @@ CATEGORY_ICONS = {
     "Iced": "Iced.svg",
     "Light_Meals": "Light_Meals.svg",
     "Milky": "milky.svg",
-    "Non-Coffee": "drinks.svg",  # shares the Drinks icon, intentional
+    "Non-Coffee": "ice_cream.svg",  # shares the Drinks icon, intentional
     "Pastry": "pastry.svg",
     "Savory_Bites": "Savory_Bites.svg",
-    "Sweets_Desserts": "Sweet_Desserts.svg",
+    "Sweets_Desserts": "Sweets_Desserts.svg",
     "Wine": "wine.svg",
     "Bread": "bread.svg",
     "Cheese_Plate": "cheese_piece.svg",  

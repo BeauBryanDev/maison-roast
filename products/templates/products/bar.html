@@ -88,7 +88,7 @@
                 </button>
 
                 {% if product.product_image %}
-                <img src="{{ product.product_image }}" alt="{{ product.name }}"
+                <img src="{{ product.product_image.url }}" alt="{{ product.name }}"
                      loading="lazy" data-fallback>
                 {% endif %}
                 <span class="img-fallback" {% if product.product_image %}hidden{% endif %}>

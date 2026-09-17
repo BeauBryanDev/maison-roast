@@ -86,10 +86,11 @@
                 <img src="{% static 'icons/heart_icon.svg' %}" alt="" aria-hidden="true">
             </button>
             <a href="{% url 'product_detail' product.slug %}" class="img-frame block">
-                {# TODO: swap product.product_image (external URL) for a local static image. #}
-                <img src="{{ product.product_image }}" alt="{{ product.name }}"
+                {% if product.product_image %}
+                <img src="{{ product.product_image.url }}" alt="{{ product.name }}"
                      loading="lazy" data-fallback>
-                <span class="img-fallback" hidden>
+                {% endif %}
+                <span class="img-fallback" {% if product.product_image %}hidden{% endif %}>
                     <img src="{% static 'icons/coffee_pot.svg' %}" alt="" class="h-16 w-16" aria-hidden="true">
                 </span>
             </a>

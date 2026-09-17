@@ -21,8 +21,9 @@ class HomeView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
  
+        # The house favourites are the original menu, so the oldest rows lead.
         context['featured_products'] = (
-            Product.objects.filter(available=True).order_by('-created_at')[:5]
+            Product.objects.filter(available=True).order_by('created_at', 'id')[:5]
         )
         # Category tiles come from categories that actually have an available
         # product, so a tile can never lead to an empty menu page.
@@ -35,6 +36,24 @@ class HomeView(TemplateView):
 
 class AboutView(TemplateView):
     template_name = 'products/about.html'
+
+    # The "Crafted With" row at the foot of the page. Icons live in static/icons/.
+    tech_stack = [
+        ('Python', 'icons/python.svg'),
+        ('Django', 'icons/django.svg'),
+        ('PostgreSQL', 'icons/postgresql.svg'),
+        ('TensorFlow', 'icons/tensorflow.svg'),
+        ('Claude', 'icons/claude_icon.webp'),
+        ('JavaScript','icons/javascript.svg'),
+        ('Tailwind CSS', 'icons/tailwindcss.svg'),
+        ('HTML5', 'icons/HTML5.svg'),
+        ('CSS3', 'icons/CSS3.svg'),
+    ]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['tech_stack'] = self.tech_stack
+        return context
 
 
 class BarView(ListView):

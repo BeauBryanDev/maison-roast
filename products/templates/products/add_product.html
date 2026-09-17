@@ -11,7 +11,7 @@
         <p class="mt-4 text-sm text-crema/70">Staff only. New items appear on the menu immediately.</p>
     </header>
 
-    <form method="post" action="{% url 'product_add' %}" class="panel-cream paper mt-8 p-8">
+    <form method="post" enctype="multipart/form-data" action="{% url 'product_add' %}" class="panel-cream paper mt-8 p-8">
         {% csrf_token %}
 
         {% if form.errors %}
@@ -87,12 +87,11 @@
 
             <div class="sm:col-span-2">
                 <label for="product_image" class="mb-2 block font-display text-sm uppercase tracking-widest text-roast/70">
-                    Image URL
+                    Image
                 </label>
-                <input type="url" id="product_image" name="product_image" class="field-cream"
-                       value="{{ form.product_image.value|default:'' }}"
-                       placeholder="https://example.com/flat-white.jpg">
-                <p class="mt-2 text-xs text-roast/60">Optional. Cards fall back to an icon if this is empty or broken.</p>
+                <input type="file" id="product_image" name="product_image" class="field-cream"
+                       accept="image/*">
+                <p class="mt-2 text-xs text-roast/60">Optional. Stored under media/products/. Cards fall back to an icon if this is empty.</p>
             </div>
 
             <div class="sm:col-span-2">

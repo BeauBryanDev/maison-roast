@@ -35,3 +35,7 @@ voyageai==0.5.0
 # pgvector Django/psycopg glue. Phase 6 -- also needs the pgvector/pgvector:pg15
 # Docker image; the stock postgres:15 image does not ship the extension.
 pgvector==0.5.0
+
+
+# Stripe payments
+stripe==15.6.1

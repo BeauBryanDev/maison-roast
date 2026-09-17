@@ -10,10 +10,16 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="Product Price")
     stock = models.IntegerField()
     available = models.BooleanField(default=True)
-    product_image = models.URLField(max_length=200, 
-                                    null=True, 
-                                    blank=True, 
-                                    verbose_name="Product Image")
+    # Self-hosted since 2026-09-15: media/products/<slug>.jpg, 320x320, made by
+    # `resize_product_images`. The URL each file was fetched from stays in
+    # image_source_url so provenance is traceable.
+    product_image = models.ImageField(upload_to='products/',
+                                      max_length=200,
+                                      null=True,
+                                      blank=True,
+                                      verbose_name="Product Image")
+    image_source_url = models.URLField(max_length=500, blank=True, default='',
+                                       verbose_name="Original image URL")
     slug = models.SlugField(max_length=64, unique=True, blank=True)
     # Many-to-many because one drink is honestly several things at once: an
     # Iced Latte is Coffee, Iced, Espresso and Milky. A single category would
