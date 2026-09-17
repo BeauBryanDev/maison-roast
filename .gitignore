@@ -218,3 +218,6 @@ node_modules/
 # under Beau's profile with a public license -- download it from there after
 # cloning. Link to be added.
 *.onnx
+
+# Deployment notes with account ids, hosts and IPs. Local only, never committed.
+DEPLOY_NOTES.local.md

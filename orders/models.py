@@ -3,7 +3,14 @@ from decimal import Decimal
 from django.db import models
 from django.conf import settings
 
-# create Order model to store order details
+
+class Status(models.TextChoices):
+        PENDING = 'PENDING', 'Pending'
+        PAID = 'PAID', 'Paid'
+        CANCELLED = 'CANCELLED', 'Cancelled'
+        DELIVERED = 'DELIVERED', 'Delivered'
+        REFUNDED = 'REFUNDED', 'Refunded'
+        
 class Order(models.Model):
     
     # optional link to the authenticated user who placed the order
@@ -21,6 +28,27 @@ class Order(models.Model):
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    # Since PENDING is the correct state for every order at creation time 
+    # it is th default status value
+    status = models.CharField(
+        max_length=10,
+        choices=Status.choices,
+        default=Status.PENDING,
+    )
+    
+    stripe_checkout_session_id = models.CharField(
+        max_length=255, 
+        null=True, 
+        blank=True,
+        unique=True,
+    )
+    
+    stripe_payment_intent_id = models.CharField(
+        max_length=255, 
+        null=True, 
+        blank=True,
+    )
     
     @property
     def total(self):

@@ -40,6 +40,10 @@
                             #{{ order.order_number }}
                         </a>
                         <span class="mt-0.5 block text-xs text-crema/50">{{ order.customer_name }}</span>
+                        <span class="mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wider
+                                     {% if order.status == 'PAID' %}bg-green-900/40 text-green-300{% elif order.status == 'PENDING' %}bg-yellow-900/40 text-yellow-300{% else %}bg-roast text-crema/70{% endif %}">
+                            {% if order.status == 'PENDING' %}Awaiting payment{% else %}{{ order.get_status_display }}{% endif %}
+                        </span>
                     </td>
                     <td class="px-6 py-4">
                         <span class="block text-sm text-crema/85">{{ order.created_at|date:"M d, Y" }}</span>

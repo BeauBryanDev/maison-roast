@@ -28,13 +28,17 @@
             </p>
         </div>
         <div class="shrink-0">
-            {% if order.is_active %}
+            {% if order.status == 'PAID' %}
             <span class="inline-flex items-center gap-2 rounded-full border border-green-700/60 bg-green-900/25 px-4 py-2 text-sm font-semibold text-green-300">
-                <span class="h-2 w-2 rounded-full bg-green-400" aria-hidden="true"></span> Active
+                <span class="h-2 w-2 rounded-full bg-green-400" aria-hidden="true"></span> Paid
+            </span>
+            {% elif order.status == 'PENDING' %}
+            <span class="inline-flex items-center gap-2 rounded-full border border-yellow-700/60 bg-yellow-900/25 px-4 py-2 text-sm font-semibold text-yellow-300">
+                <span class="h-2 w-2 rounded-full bg-yellow-400" aria-hidden="true"></span> Awaiting payment
             </span>
             {% else %}
-            <span class="inline-flex items-center gap-2 rounded-full border border-red-800/60 bg-red-900/25 px-4 py-2 text-sm font-semibold text-red-300">
-                <span class="h-2 w-2 rounded-full bg-red-400" aria-hidden="true"></span> Inactive
+            <span class="inline-flex items-center gap-2 rounded-full border border-gold/40 bg-roast px-4 py-2 text-sm font-semibold text-crema/80">
+                <span class="h-2 w-2 rounded-full bg-gold" aria-hidden="true"></span> {{ order.get_status_display }}
             </span>
             {% endif %}
         </div>
@@ -54,7 +58,7 @@
                 <li class="flex items-center gap-4 p-4">
                     <div class="img-frame h-16 w-16 shrink-0 rounded-lg" style="aspect-ratio: 1 / 1;">
                         {% if line.product.product_image %}
-                        <img src="{{ line.product.product_image }}" alt="{{ line.product.name }}"
+                        <img src="{{ line.product.product_image.url }}" alt="{{ line.product.name }}"
                              loading="lazy" data-fallback>
                         {% endif %}
                         <span class="img-fallback" {% if line.product.product_image %}hidden{% endif %}>
@@ -127,6 +131,15 @@
             </dl>
 
             <div class="mt-8 flex flex-col gap-3">
+                {% if order.status == 'PENDING' %}
+                <form method="post" action="{% url 'start_checkout' order.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-terracotta w-full py-3 text-xs">
+                        Pay ${{ order.total|floatformat:2 }} with card
+                    </button>
+                </form>
+                <p class="text-center text-xs text-roast/60">Secure checkout by Stripe.</p>
+                {% endif %}
                 <a href="{% url 'order_list' %}"
                    class="inline-flex items-center justify-center rounded-full border border-roast/40 px-6 py-3 font-body text-sm uppercase tracking-wider text-roast transition hover:border-roast hover:bg-roast/5">
                     All Orders

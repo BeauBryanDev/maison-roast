@@ -155,6 +155,11 @@ AUTH_USER_MODEL = 'users.CustomUser'
 
 LOGIN_URL = 'login'
 
+STRIPE_SECRET_KEY = env('STRIPE_SECRET_KEY')
+
+# Empty until the Stripe CLI / dashboard issues one; the webhook view refuses
+# every delivery while it is unset rather than skipping verification.
+STRIPE_WEBHOOK_SECRET = env('STRIPE_WEBHOOK_SECRET', default='').strip()
 
 # Legal drinking age. Enforced in orders.services.place_order -- the one
 # chokepoint the web checkout and Basil's create_order tool share.

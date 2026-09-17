@@ -544,8 +544,8 @@ class AlcoholAgeGateTestCase(TestCase):
         response = self.client.post(reverse("add_product_order"), {
             "product": self.wine.pk, "quantity": 1,
         })
-        self.assertRedirects(response, reverse("order_list"))
         self.assertEqual(Order.objects.count(), 1)
+        self.assertRedirects(response, reverse("order_details", args=[Order.objects.get().pk]))
 
     # --- Basil's tool ---
 
