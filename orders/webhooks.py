@@ -40,7 +40,8 @@ def stripe_webhook(request):
  
  
 def _mark_paid(session):
-    session_id = session.get('id')
+    # stripe>=15 StripeObject is not a dict: no .get(), subscript only.
+    session_id = session['id']
     order = Order.objects.filter(stripe_checkout_session_id=session_id).first()
  
     if order is None:
@@ -54,7 +55,7 @@ def _mark_paid(session):
         return  # already processed, duplicate delivery -- no-op
  
     order.status = Status.PAID
-    order.stripe_payment_intent_id = session.get('payment_intent', '')
+    order.stripe_payment_intent_id = session['payment_intent'] or ''
     order.save(update_fields=['status', 'stripe_payment_intent_id'])
  
  
