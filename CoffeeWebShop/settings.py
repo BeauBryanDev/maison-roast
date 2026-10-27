@@ -205,6 +205,10 @@ VOYAGE_DIM = env.int('VOYAGE_DIM', default=1024)
 BASIL_UPLOAD_DIR = 'basil_uploads'
 BASIL_MAX_UPLOAD_BYTES = 5 * 1024 * 1024
 
+# Behind nginx + Cloudflare: trust the forwarded scheme and the live origin.
+CSRF_TRUSTED_ORIGINS = ['https://maisonroast.tensorkingdom.com']
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 
 REST_FRAMEWORK = {
     

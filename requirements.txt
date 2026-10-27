@@ -39,3 +39,6 @@ pgvector==0.5.0
 
 # Stripe payments
 stripe==15.6.1
+
+# Production WSGI server
+gunicorn==26.2.0
