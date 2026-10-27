@@ -45,9 +45,10 @@ function initScrollReveal() {
 }
 
 /**
- * Product images are external URLs (Product.product_image is a URLField), so
- * they rot. On error we hide the broken <img> and reveal the local placeholder
- * that sits behind it, keeping the card's shape intact.
+ * Product images are self-hosted under media/products/, but a row can still
+ * point at a file that was never copied to this server. On error we hide the
+ * broken <img> and reveal the local placeholder behind it, keeping the card's
+ * shape intact.
  */
 export function initImageFallback(root = document) {
   root.querySelectorAll('img[data-fallback]').forEach((img) => {

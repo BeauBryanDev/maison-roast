@@ -18,6 +18,7 @@ def search_knowledge_base(query, top_k=DEFAULT_TOP_K):
         return {'error': 'Give me something to look up.'}
 
     if not KnowledgeDocument.objects.exists():
+        logger.warning('Knowledge base is empty; run ingest_knowledge')
         return {'error': 'The knowledge base is empty. Run ingest_knowledge.'}
 
     try:

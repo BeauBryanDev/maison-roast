@@ -11,11 +11,6 @@ MAX_TOP_K = 10
 _client = None
 
 
-class KnowledgeSearchError(Exception):
-    """Raised when the embeddings backend fails. Distinct from a clean
-    zero-result search, so callers can tell the two apart."""
-    pass
-
 # Semantic Retrieval API
 
 def get_client():
@@ -53,17 +48,13 @@ def search(query, top_k=DEFAULT_TOP_K):
         top_k = DEFAULT_TOP_K
         
         
-    try:
-        
-        query = embed_query(query)
-        
-    except voyageai.error.RateLimitError:
-        
-        raise KnowledgeSearchError('rate limited')
+    # One embed call per question. RateLimitError propagates as-is so the
+    # tool can tell Basil to ask again rather than report "no such policy".
+    vector = embed_query(query)
 
     rows = (
         KnowledgeDocument.objects
-        .annotate(distance=CosineDistance('embedding', embed_query(query)))
+        .annotate(distance=CosineDistance('embedding', vector))
         .order_by('distance')[:top_k]
     )
 
