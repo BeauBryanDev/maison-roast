@@ -240,6 +240,7 @@ LOGGING = {
     'loggers': {
         'django.request': {'handlers': ['console'], 'level': 'ERROR', 'propagate': False},
         'orders': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
-        'basil': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
+        # INFO so the per-request token usage line (cache reads/writes) shows.
+        'basil': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
     },
 }

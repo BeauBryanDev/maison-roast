@@ -73,10 +73,16 @@ _API_ROLE = {
 }
 
 
+def _sort_json_keys(content):
+    """Sorted-key JSON. jsonb reorders keys on save, so the live loop and a
+    replay from the DB must agree byte for byte or the cached prefix misses."""
+    return json.loads(json.dumps(content, sort_keys=True))
+
+
 def load_history(session):
     """Replay a session as Anthropic message params."""
     return [
-        {'role': _API_ROLE[row.role], 'content': row.content}
+        {'role': _API_ROLE[row.role], 'content': _sort_json_keys(row.content)}
         for row in session.messages.all()
         if row.role in _API_ROLE
     ]
@@ -84,7 +90,26 @@ def load_history(session):
 
 def _blocks(message):
     """SDK content blocks as plain JSON, safe to store and to resend."""
-    return [block.model_dump(exclude_none=True) for block in message.content]
+    return _sort_json_keys(
+        [block.model_dump(exclude_none=True) for block in message.content])
+
+
+def _cached_system():
+    """System prompt as one cached block, so tools + system are shared across
+    every session. Below the model's minimum prefix it silently does not cache."""
+    return [{'type': 'text', 'text': get_system_prompt(),
+             'cache_control': {'type': 'ephemeral'}}]
+
+
+def _log_usage(reply):
+    usage = getattr(reply, 'usage', None)
+    if usage is None:
+        return
+    logger.info('basil usage: input=%s cache_read=%s cache_write=%s output=%s',
+                usage.input_tokens,
+                getattr(usage, 'cache_read_input_tokens', 0),
+                getattr(usage, 'cache_creation_input_tokens', 0),
+                usage.output_tokens)
 
 
 def run_turn(session, user_text, user=None):
@@ -124,19 +149,25 @@ def _run_turn(session, user_text, user):
         capped = tool_calls >= cap
         kwargs = {'tool_choice': {'type': 'none'}} if capped else {}
 
+        # Top-level cache_control puts the second breakpoint on the last
+        # message, so each tool round and each new turn reads the conversation
+        # so far from cache instead of paying for it again.
         with client.messages.stream(
             model=settings.BASIL_LLM_MODEL,
             max_tokens=MAX_TOKENS,
-            system=get_system_prompt(),
+            system=_cached_system(),
             tools=TOOL_SCHEMAS,
             messages=messages,
+            cache_control={'type': 'ephemeral'},
             **kwargs,
         ) as stream:
             for text in stream.text_stream:
-                
+
                 yield 'token', {'text': text}
-                
+
             reply = stream.get_final_message()
+
+        _log_usage(reply)
 
         blocks = _blocks(reply)
         uses = [b for b in blocks if b.get('type') == 'tool_use']
@@ -180,7 +211,7 @@ def _run_turn(session, user_text, user):
             content=results
             )
         
-        messages.append({'role': 'user', 'content': results})
+        messages.append({'role': 'user', 'content': _sort_json_keys(results)})
 
 
  

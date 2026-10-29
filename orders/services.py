@@ -69,8 +69,8 @@ def place_order(user, product_id, quantity):
         if is_age_restricted(product):
             
             if not (getattr(user, 'is_of_legal_age', None)
-                    
                     and user.is_of_legal_age()):
+                
                 raise OrderError(
                     f'We cannot sell alcohol to anyone under '
                     f'{settings.MINIMUM_ALCOHOL_AGE}. Please choose something else '
@@ -81,6 +81,7 @@ def place_order(user, product_id, quantity):
             # one. basil.tools.check_compliance reports it ahead of time, but
             # that tool is advisory -- this is what binds.
             if not is_within_service_hours():
+                
                 raise OrderError(
                     f'We do not serve alcohol before '
                     f'{settings.ALCOHOL_SERVICE_START_HOUR}:00. Please come '
@@ -88,6 +89,7 @@ def place_order(user, product_id, quantity):
                 )
 
         if product.stock < quantity:
+            
             raise OrderError(
                 f'Not enough stock! Only {product.stock} units available.'
             )
