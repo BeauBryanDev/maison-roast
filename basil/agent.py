@@ -45,7 +45,9 @@ def get_client():
             headers['anthropic-workspace-id'] = settings.BASIL_WORKSPACE_ID
             
         _client = anthropic.Anthropic(
-            api_key=settings.BASIL_API_KEY, default_headers=headers)
+            api_key=settings.BASIL_API_KEY,
+            default_headers=headers)
+        
     return _client
 
 
@@ -111,26 +113,33 @@ def load_history(session):
 
     # Results are re-attached to their tool_use by id rather than replayed
     # where they sit: a turn cut off mid-round, or two tabs writing at once,
-    # must not leave a tool_use without its result -- the API rejects that
-    # request, and every later one in the session with it.
+    # must not leave a tool_use without its resulte .
     results = {}
     for i, row in enumerate(rows):
         if row.role == ChatMessage.Role.TOOL_RESULT:
             for block in _sort_json_keys(row.content):
                 if i < full_from:
                     block = {**block, 'content': STALE_RESULT}
+                    
                 results[block['tool_use_id']] = block
 
     history = []
     for row in rows:
         if row.role == ChatMessage.Role.TOOL_RESULT:
             continue
+        
         content = _sort_json_keys(row.content)
-        history.append({'role': _API_ROLE[row.role], 'content': content})
+        history.append({'role': _API_ROLE[row.role], 
+                        'content': content})
+        
         if row.role == ChatMessage.Role.TOOL_USE:
             ids = [b['id'] for b in content if b.get('type') == 'tool_use']
-            history.append({'role': 'user', 'content': [
-                results.get(use_id) or _interrupted(use_id) for use_id in ids]})
+            history.append({
+                'role': 'user',
+                'content': [
+                results.get(use_id) or _interrupted(use_id) for use_id in ids]
+                })
+            
     return history
 
 
@@ -148,8 +157,10 @@ def _blocks(message):
 def _cached_system():
     """System prompt as one cached block, so tools + system are shared across
     every session. Below the model's minimum prefix it silently does not cache."""
-    return [{'type': 'text', 'text': get_system_prompt(),
-             'cache_control': {'type': 'ephemeral'}}]
+    return [{'type': 'text', 
+             'text': get_system_prompt(),
+             'cache_control': {'type': 'ephemeral'}
+             }]
 
 
 def _log_usage(reply):
@@ -183,7 +194,8 @@ def run_turn(session, user_text, user=None):
 def _run_turn(session, user_text, user):
     
     messages = load_history(session)
-    messages.append({'role': 'user', 'content': user_text})
+    messages.append({'role': 'user', 
+                     'content': user_text})
     
     ChatMessage.objects.create(
         session=session, 
@@ -222,14 +234,16 @@ def _run_turn(session, user_text, user):
 
         blocks = _blocks(reply)
         uses = [b for b in blocks if b.get('type') == 'tool_use']
-        messages.append({'role': 'assistant', 'content': blocks})
+        messages.append({'role': 'assistant', 
+                         'content': blocks})
 
         # At the cap the turn ends here whatever came back. tool_choice none
         # should have prevented a tool_use block; the loop does not depend on
         # the model having honoured it. load_history stubs any stray tool_use.
         if not uses or capped:
             role = ChatMessage.Role.TOOL_USE if uses else ChatMessage.Role.ASSISTANT
-            ChatMessage.objects.create(session=session, role=role, content=blocks)
+            ChatMessage.objects.create(session=session, 
+                                       role=role, content=blocks)
             return
 
         # Every tool_use needs a tool_result in one user message, or the next
@@ -261,16 +275,21 @@ def _run_turn(session, user_text, user):
 
         with transaction.atomic():
             ChatMessage.objects.create(
-                session=session, role=ChatMessage.Role.TOOL_USE, content=blocks)
+                session=session, 
+                role=ChatMessage.Role.TOOL_USE, 
+                content=blocks)
             ChatMessage.objects.create(
                 session=session,
                 role=ChatMessage.Role.TOOL_RESULT,
                 content=results
                 )
 
-        messages.append({'role': 'user', 'content': _sort_json_keys(results)})
+        messages.append({'role': 'user', 
+                         'content': _sort_json_keys(results)}
+                        )
 
         for use in uses:
+            
             yield 'tool_end', {'name': use['name']}
 
 

@@ -11,6 +11,8 @@ db.sqlite3
 db.sqlite3-journal
 media
 basil_uploads/
+basil/evals/results/
+basil/evals/.embed_cache.json
 script.py
 test_db.py
 

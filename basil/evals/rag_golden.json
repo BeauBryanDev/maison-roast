@@ -1,0 +1,316 @@
+{
+  "description": "Golden questions for Basil's RAG eval over basil/knowledge/*.md. expected_chunks use the same source/title/heading values ingest_knowledge stores, so retrieval can be scored separately from the answer.",
+  "created": "2026-10-29",
+  "corpus": [
+    "Maison_Roast_Story_Telling.md",
+    "Classic_Cakes.md",
+    "Cook_Handbook.md",
+    "Cheese.md"
+  ],
+  "questions": [
+    {
+      "id": "q01",
+      "question": "Who started Maison Roast, and when?",
+      "category": "brand_story",
+      "difficulty": "easy",
+      "expected_chunks": [
+        {"source": "Maison_Roast_Story_Telling.md", "title": "Maison Roast — Our Story", "heading": "The Origin of Maison Roast"}
+      ],
+      "expected_answer": "Two friends, Elias and Maya, founded it in the autumn of 2018 by taking over a defunct cobbler's workshop in the arts district.",
+      "must_include": ["Elias", "Maya", "2018"],
+      "must_not_include": []
+    },
+    {
+      "id": "q02",
+      "question": "Why is it called Maison Roast?",
+      "category": "brand_story",
+      "difficulty": "easy",
+      "expected_chunks": [
+        {"source": "Maison_Roast_Story_Telling.md", "title": "Maison Roast — Our Story", "heading": "The Meaning Behind the Name"}
+      ],
+      "expected_answer": "\"Maison\" is French for house or home, evoking European baking and hospitality; \"Roast\" is the physical act of transforming green coffee beans over heat. Together they say roasting and baking are domestic crafts, best shared in a home among friends.",
+      "must_include": ["French", "house or home", "roast"],
+      "must_not_include": []
+    },
+    {
+      "id": "q03",
+      "question": "Is Maison Roast a fancy, formal kind of café?",
+      "category": "brand_story",
+      "difficulty": "medium",
+      "expected_chunks": [
+        {"source": "Maison_Roast_Story_Telling.md", "title": "Maison Roast — Vintage Style Social Description", "heading": "A Youthful Vintage, Not a Museum Piece"},
+        {"source": "Maison_Roast_Story_Telling.md", "title": "Maison Roast — Vintage Style Social Description", "heading": "What Vintage Style Is Not"}
+      ],
+      "expected_answer": "No. The vintage look is paired with youthful, free-spirited energy; it is not a stuffy, formal or exclusive café. There are no velvet ropes or dress code, and everyone is welcome.",
+      "must_include": ["not formal", "everyone is welcome"],
+      "must_not_include": ["dress code required"]
+    },
+    {
+      "id": "q04",
+      "question": "How long do I have to ask for a refund on an online order?",
+      "category": "refund_policy",
+      "difficulty": "easy",
+      "expected_chunks": [
+        {"source": "Maison_Roast_Story_Telling.md", "title": "Refund Policy — Maison Roast", "heading": "Eligibility for Refunds"}
+      ],
+      "expected_answer": "Within 14 days of delivery. The product must be unopened in its original sealed packaging, unless it arrived damaged or defective, in which case packaging status doesn't matter.",
+      "must_include": ["14 days", "unopened"],
+      "must_not_include": []
+    },
+    {
+      "id": "q05",
+      "question": "My order showed up crushed and one item is missing. What should I do?",
+      "category": "refund_policy",
+      "difficulty": "medium",
+      "expected_chunks": [
+        {"source": "Maison_Roast_Story_Telling.md", "title": "Refund Policy — Maison Roast", "heading": "Damaged or Missing Items"}
+      ],
+      "expected_answer": "Report it within 24 hours of delivery with photos. Maison Roast will either replace the damaged or missing items at no cost or give a full refund for them, whichever the customer prefers.",
+      "must_include": ["24 hours", "photos", "replace", "refund"],
+      "must_not_include": ["14 days"]
+    },
+    {
+      "id": "q06",
+      "question": "Once my refund is approved, how long until I see the money?",
+      "category": "refund_policy",
+      "difficulty": "medium",
+      "expected_chunks": [
+        {"source": "Maison_Roast_Story_Telling.md", "title": "Refund Policy — Maison Roast", "heading": "Processing Timeline"}
+      ],
+      "expected_answer": "Refunds are processed within 7 business days of receiving and inspecting the returned item, back to the original payment method. The bank may take another 3–5 business days to show it. A confirmation email is sent when it is issued.",
+      "must_include": ["7 business days", "3–5 business days", "original payment method"],
+      "must_not_include": []
+    },
+    {
+      "id": "q07",
+      "question": "What email do I write to if I want to dispute a refund decision?",
+      "category": "refund_policy",
+      "difficulty": "easy",
+      "expected_chunks": [
+        {"source": "Maison_Roast_Story_Telling.md", "title": "Refund Policy — Maison Roast", "heading": "Questions or Disputes"}
+      ],
+      "expected_answer": "maison.roast.customer.services@gmail.com — or the contact form on the website. They reply within 2 business days.",
+      "must_include": ["maison.roast.customer.services@gmail.com", "2 business days"],
+      "must_not_include": []
+    },
+    {
+      "id": "q08",
+      "question": "I live 6 km from the shop. How much will delivery cost?",
+      "category": "delivery",
+      "difficulty": "medium",
+      "expected_chunks": [
+        {"source": "Maison_Roast_Story_Telling.md", "title": "Delivery Timeframes", "heading": "Delivery Fees"}
+      ],
+      "expected_answer": "$6.00: a $3.00 base fee plus $0.50 per km (6 × $0.50 = $3.00).",
+      "must_include": ["$6.00", "$3.00", "$0.50"],
+      "must_not_include": []
+    },
+    {
+      "id": "q09",
+      "question": "What happens if my delivery takes longer than 3 hours?",
+      "category": "delivery",
+      "difficulty": "hard",
+      "expected_chunks": [
+        {"source": "Maison_Roast_Story_Telling.md", "title": "Delivery Timeframes", "heading": ""},
+        {"source": "Maison_Roast_Story_Telling.md", "title": "Delivery Timeframes", "heading": "Delivery Delays"}
+      ],
+      "expected_answer": "The delivery fee is waived entirely if it takes more than 3 hours from when the order was accepted. Delays caused by weather are not Maison Roast's responsibility.",
+      "must_include": ["fee", "waived", "weather"],
+      "must_not_include": ["refund"],
+      "notes": "Two chunks: the waiver is in the H1 preamble (empty heading); the weather exception is in Delivery Delays."
+    },
+    {
+      "id": "q10",
+      "question": "Can I cancel my order after placing it?",
+      "category": "delivery",
+      "difficulty": "hard",
+      "expected_chunks": [
+        {"source": "Maison_Roast_Story_Telling.md", "title": "Delivery Timeframes", "heading": "Order Cancellations & Changes"},
+        {"source": "Maison_Roast_Story_Telling.md", "title": "Refund Policy — Maison Roast", "heading": "Change of Mind or Wrong Order"}
+      ],
+      "expected_answer": "For delivery orders, yes, within 30 minutes of placing it; after that it may already be in preparation. (The refund policy also mentions contacting them within 48 hours, before it ships, for shipped online purchases.)",
+      "must_include": ["30 minutes"],
+      "must_not_include": [],
+      "notes": "Conflicting sources: 30 minutes (delivery) vs 48 hours before shipping (refund policy). A good answer gives 30 minutes for delivery orders and does not merge the two."
+    },
+    {
+      "id": "q11",
+      "question": "Does the carrot cake have nuts in it?",
+      "category": "allergens",
+      "difficulty": "easy",
+      "expected_chunks": [
+        {"source": "Maison_Roast_Story_Telling.md", "title": "Maison Roast — Allergen Reference", "heading": "Per-Product Allergen Reference"}
+      ],
+      "expected_answer": "Yes, it contains walnuts. It also contains gluten/wheat, dairy and egg, with a cream cheese frosting.",
+      "must_include": ["walnuts"],
+      "must_not_include": ["no nuts"],
+      "notes": "The table is split into row pieces with the header repeated; checks the carrot_cake row is retrieved."
+    },
+    {
+      "id": "q12",
+      "question": "Which of your desserts are gluten-free?",
+      "category": "allergens",
+      "difficulty": "hard",
+      "expected_chunks": [
+        {"source": "Maison_Roast_Story_Telling.md", "title": "Maison Roast — Allergen Reference", "heading": "Note on Gluten-Free and Dairy-Free Options"}
+      ],
+      "expected_answer": "None can be guaranteed gluten-free, since wheat flour is used throughout the shared kitchen. Desserts without intentional gluten are chocolate mousse, crème brûlée, panna cotta, frozen yogurt and ice cream.",
+      "must_include": ["chocolate mousse", "panna cotta", "cross-contact"],
+      "must_not_include": ["guaranteed gluten-free"],
+      "notes": "Safety: must not call anything gluten-free without the cross-contact caveat."
+    },
+    {
+      "id": "q13",
+      "question": "I have a severe peanut allergy. Is the tiramisu safe for me?",
+      "category": "allergens",
+      "difficulty": "hard",
+      "expected_chunks": [
+        {"source": "Maison_Roast_Story_Telling.md", "title": "Maison Roast — Allergen Reference", "heading": "What to Do If You Have a Severe Allergy"},
+        {"source": "Maison_Roast_Story_Telling.md", "title": "Maison Roast — Allergen Reference", "heading": "Per-Product Allergen Reference"}
+      ],
+      "expected_answer": "Peanuts are not a listed ingredient in the tiramisu, but peanuts are used in the same kitchen on shared equipment, so cross-contact can't be ruled out. With a severe allergy, speak to a staff member in person before ordering rather than relying on the chatbot.",
+      "must_include": ["staff", "cross-contact"],
+      "must_not_include": ["it is safe", "safe for you"],
+      "notes": "Safety-critical. Fails if Basil says it is safe."
+    },
+    {
+      "id": "q14",
+      "question": "Where does your coffee come from?",
+      "category": "coffee_knowledge",
+      "difficulty": "medium",
+      "expected_chunks": [
+        {"source": "Maison_Roast_Story_Telling.md", "title": "Maison Roast — Allergen Reference", "heading": "Colombia's Stake in the Global Coffee Marketplace"}
+      ],
+      "expected_answer": "Colombia is the backbone of the roasting program: high-altitude, washed Arabica. Colombian lots often appear in the rotation, and staff are happy to say which origin is in the grinder today.",
+      "must_include": ["Colombia", "Arabica"],
+      "must_not_include": [],
+      "notes": "Known corpus wart: coffee sections sit under the Allergen Reference H1, so the stored title is wrong."
+    },
+    {
+      "id": "q15",
+      "question": "What water temperature should I use to brew coffee at home?",
+      "category": "coffee_knowledge",
+      "difficulty": "easy",
+      "expected_chunks": [
+        {"source": "Maison_Roast_Story_Telling.md", "title": "Maison Roast — Allergen Reference", "heading": "7 Things That Make a Good Coffee Delicious"}
+      ],
+      "expected_answer": "Between 195°F and 205°F (90°C–96°C). Boiling water scorches the coffee and pulls out bitter compounds.",
+      "must_include": ["195", "205"],
+      "must_not_include": []
+    },
+    {
+      "id": "q16",
+      "question": "What's the difference between a light roast and a dark roast?",
+      "category": "coffee_knowledge",
+      "difficulty": "medium",
+      "expected_chunks": [
+        {"source": "Maison_Roast_Story_Telling.md", "title": "Maison Roast — Allergen Reference", "heading": "Coffee Roasting Techniques"}
+      ],
+      "expected_answer": "Light roast comes out just after the first crack: it keeps the origin character, bright acidity, floral or fruity notes, and has no surface oil. Dark roast goes into the second crack: oils come to the surface and it tastes bold, heavy and smoky or bittersweet, more of the roast than the origin.",
+      "must_include": ["first crack", "second crack", "oil"],
+      "must_not_include": []
+    },
+    {
+      "id": "q17",
+      "question": "How long does the tiramisu have to chill before it's served?",
+      "category": "recipes",
+      "difficulty": "medium",
+      "expected_chunks": [
+        {"source": "Classic_Cakes.md", "title": "Classic European Coffee Shop Recipe Book", "heading": "2. Classic Tiramisu"}
+      ],
+      "expected_answer": "At least 6 hours, preferably overnight, so the ladyfingers absorb the coffee and the mascarpone cream sets.",
+      "must_include": ["6 hours", "overnight"],
+      "must_not_include": []
+    },
+    {
+      "id": "q18",
+      "question": "What cheese goes into cannoli?",
+      "category": "recipes",
+      "difficulty": "easy",
+      "expected_chunks": [
+        {"source": "Cheese.md", "title": "All About Cheese", "heading": "Cheese Desserts"},
+        {"source": "Classic_Cakes.md", "title": "Classic European Coffee Shop Recipe Book", "heading": "4. Sicilian Cannoli"}
+      ],
+      "expected_answer": "Sweetened ricotta: whole-milk ricotta, drained thoroughly, mixed with powdered sugar and vanilla, often with chocolate chips.",
+      "must_include": ["ricotta"],
+      "must_not_include": ["mascarpone"],
+      "notes": "Either source is a correct hit."
+    },
+    {
+      "id": "q19",
+      "question": "Hice un pedido por error y cambié de opinión. ¿Me pueden devolver el dinero?",
+      "category": "refund_policy",
+      "difficulty": "hard",
+      "expected_chunks": [
+        {"source": "Maison_Roast_Story_Telling.md", "title": "Refund Policy — Maison Roast", "heading": "Change of Mind or Wrong Order"}
+      ],
+      "expected_answer": "(In Spanish) Contact them within 48 hours of placing the order, before it ships, and they may be able to cancel or change it. Once it has shipped, change-of-mind returns are not refundable.",
+      "must_include": ["48"],
+      "must_not_include": [],
+      "notes": "Cross-lingual: Spanish query against an English corpus; the reply must be in Spanish (system prompt rule)."
+    },
+    {
+      "id": "q20",
+      "question": "Do you cater weddings or private events?",
+      "category": "out_of_scope",
+      "difficulty": "hard",
+      "expected_chunks": [],
+      "expected_answer": "Basil should say he couldn't find anything about catering or private events, not invent a policy, and could suggest contacting the shop.",
+      "must_include": [],
+      "must_not_include": ["we cater", "yes, we do"],
+      "notes": "Unanswerable. retrieve.py has no similarity floor, so top-k still returns chunks; tests that Basil does not answer from irrelevant context."
+    },
+    {
+      "id": "q21",
+      "question": "What does rennet actually do when you make cheese?",
+      "category": "cheese",
+      "difficulty": "medium",
+      "expected_chunks": [
+        {"source": "Cheese.md", "title": "All About Cheese", "heading": "The Cheesemaking Process"}
+      ],
+      "expected_answer": "Rennet is an enzyme added to the acidified milk that makes the casein proteins link together into a soft gel, the curd. It traditionally came from calf stomachs; microbial and vegetable rennets are common today. Some cheeses rely mainly on acid instead.",
+      "must_include": ["enzyme", "casein", "curd"],
+      "must_not_include": [],
+      "notes": "The process section is long and split into overlapping pieces; checks the Coagulation step is retrieved."
+    },
+    {
+      "id": "q22",
+      "question": "Can you name a few blue cheeses?",
+      "category": "cheese",
+      "difficulty": "easy",
+      "expected_chunks": [
+        {"source": "Cheese.md", "title": "All About Cheese", "heading": "Main Cheese Families"}
+      ],
+      "expected_answer": "Roquefort, Gorgonzola and Stilton, which are inoculated with mold cultures.",
+      "must_include": ["Roquefort", "Gorgonzola", "Stilton"],
+      "must_not_include": []
+    },
+    {
+      "id": "q23",
+      "question": "What temperature is the oil when you fry beignets?",
+      "category": "recipes",
+      "difficulty": "easy",
+      "expected_chunks": [
+        {"source": "Cook_Handbook.md", "title": "Cook Handbook", "heading": "Beignets"}
+      ],
+      "expected_answer": "360°F (180°C). They're fried until golden on both sides, drained, then dusted generously with powdered sugar while warm.",
+      "must_include": ["360", "180"],
+      "must_not_include": [],
+      "notes": "Near-miss risk: the cannoli recipe fries at 175–180°C; must not answer with the cannoli range."
+    },
+    {
+      "id": "q24",
+      "question": "What kind of music do you play in the shop?",
+      "category": "brand_story",
+      "difficulty": "medium",
+      "expected_chunks": [
+        {"source": "Maison_Roast_Story_Telling.md", "title": "Maison Roast — Our Story", "heading": "Our Vintage Aesthetic"},
+        {"source": "Maison_Roast_Story_Telling.md", "title": "Maison Roast — Our Story", "heading": "The Community We Share"}
+      ],
+      "expected_answer": "A curated rotation of vinyl records spins on the turntable behind the counter, with a low hum of indie rock in the room.",
+      "must_include": ["vinyl"],
+      "must_not_include": ["playlist", "Spotify"],
+      "notes": "Either chunk is a correct hit; the vinyl detail also appears in the Vintage Style Social Description."
+    }
+  ]
+}
