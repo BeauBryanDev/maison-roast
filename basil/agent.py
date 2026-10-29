@@ -4,6 +4,7 @@ import logging
 
 import anthropic
 from django.conf import settings
+from django.db import transaction
 
 from .models import ChatMessage
 from .tools import TOOL_SCHEMAS, dispatch
@@ -19,6 +20,8 @@ HISTORY_TURNS = 10
 FULL_RESULT_TURNS = 3
 STALE_RESULT = ('Earlier tool result dropped to save context. '
                 'Call the tool again if you need it.')
+INTERRUPTED_RESULT = ('This tool call was interrupted and has no result. '
+                      'Call the tool again if you need it.')
 
 SYSTEM_PROMPT_PATH = settings.BASE_DIR / 'basil' / 'prompts' / 'system_prompt.md'
 
@@ -106,14 +109,34 @@ def load_history(session):
 
     full_from = starts[-FULL_RESULT_TURNS] if len(starts) > FULL_RESULT_TURNS else 0
 
-    history = []
+    # Results are re-attached to their tool_use by id rather than replayed
+    # where they sit: a turn cut off mid-round, or two tabs writing at once,
+    # must not leave a tool_use without its result -- the API rejects that
+    # request, and every later one in the session with it.
+    results = {}
     for i, row in enumerate(rows):
+        if row.role == ChatMessage.Role.TOOL_RESULT:
+            for block in _sort_json_keys(row.content):
+                if i < full_from:
+                    block = {**block, 'content': STALE_RESULT}
+                results[block['tool_use_id']] = block
+
+    history = []
+    for row in rows:
+        if row.role == ChatMessage.Role.TOOL_RESULT:
+            continue
         content = _sort_json_keys(row.content)
-        if row.role == ChatMessage.Role.TOOL_RESULT and i < full_from:
-            # tool_use_id stays, so each tool_use still has its result.
-            content = [{**block, 'content': STALE_RESULT} for block in content]
         history.append({'role': _API_ROLE[row.role], 'content': content})
+        if row.role == ChatMessage.Role.TOOL_USE:
+            ids = [b['id'] for b in content if b.get('type') == 'tool_use']
+            history.append({'role': 'user', 'content': [
+                results.get(use_id) or _interrupted(use_id) for use_id in ids]})
     return history
+
+
+def _interrupted(tool_use_id):
+    return {'content': INTERRUPTED_RESULT, 'is_error': True,
+            'tool_use_id': tool_use_id, 'type': 'tool_result'}
 
 
 def _blocks(message):
@@ -199,24 +222,28 @@ def _run_turn(session, user_text, user):
 
         blocks = _blocks(reply)
         uses = [b for b in blocks if b.get('type') == 'tool_use']
-        role = ChatMessage.Role.TOOL_USE if uses else ChatMessage.Role.ASSISTANT
-        ChatMessage.objects.create(session=session, role=role, content=blocks)
         messages.append({'role': 'assistant', 'content': blocks})
 
         # At the cap the turn ends here whatever came back. tool_choice none
         # should have prevented a tool_use block; the loop does not depend on
-        # the model having honoured it.
+        # the model having honoured it. load_history stubs any stray tool_use.
         if not uses or capped:
+            role = ChatMessage.Role.TOOL_USE if uses else ChatMessage.Role.ASSISTANT
+            ChatMessage.objects.create(session=session, role=role, content=blocks)
             return
 
         # Every tool_use needs a tool_result in one user message, or the next
-        # request is rejected.
-        results = []
-        
+        # request is rejected. Nothing is yielded between running the tools and
+        # saving both rows: a browser that leaves mid-round closes this
+        # generator at a yield, and would strand a tool_use with no result.
         for use in uses:
-            
             yield 'tool_start', {'name': use['name']}
-            output = dispatch(use['name'], 
+
+        results = []
+
+        for use in uses:
+
+            output = dispatch(use['name'],
                               use.get('input'), 
                               user=user,
                               session=session)
@@ -229,17 +256,22 @@ def _run_turn(session, user_text, user):
                                       ),
                 'is_error': 'error' in output,
             })
-            yield 'tool_end', {'name': use['name']}
 
         tool_calls += len(uses)
-        
-        ChatMessage.objects.create(
-            session=session, 
-            role=ChatMessage.Role.TOOL_RESULT, 
-            content=results
-            )
-        
+
+        with transaction.atomic():
+            ChatMessage.objects.create(
+                session=session, role=ChatMessage.Role.TOOL_USE, content=blocks)
+            ChatMessage.objects.create(
+                session=session,
+                role=ChatMessage.Role.TOOL_RESULT,
+                content=results
+                )
+
         messages.append({'role': 'user', 'content': _sort_json_keys(results)})
+
+        for use in uses:
+            yield 'tool_end', {'name': use['name']}
 
 
  
