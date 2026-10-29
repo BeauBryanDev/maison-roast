@@ -11,6 +11,15 @@ from .tools import TOOL_SCHEMAS, dispatch
 logger = logging.getLogger(__name__)
 
 MAX_TOKENS = 2048
+
+# Customer turns replayed to the model. Older ones stay in the DB for the rail.
+HISTORY_TURNS = 10
+# Turns whose tool results are replayed in full; older ones become a stub.
+# Three, so "I'll take that one" still finds last turn's product_id.
+FULL_RESULT_TURNS = 3
+STALE_RESULT = ('Earlier tool result dropped to save context. '
+                'Call the tool again if you need it.')
+
 SYSTEM_PROMPT_PATH = settings.BASE_DIR / 'basil' / 'prompts' / 'system_prompt.md'
 
 _client = None
@@ -79,13 +88,32 @@ def _sort_json_keys(content):
     return json.loads(json.dumps(content, sort_keys=True))
 
 
+def _turn_starts(rows):
+    return [i for i, row in enumerate(rows) if row.role == ChatMessage.Role.USER]
+
+
 def load_history(session):
-    """Replay a session as Anthropic message params."""
-    return [
-        {'role': _API_ROLE[row.role], 'content': _sort_json_keys(row.content)}
-        for row in session.messages.all()
-        if row.role in _API_ROLE
-    ]
+    """Replay the recent part of a session as Anthropic message params."""
+    rows = [row for row in session.messages.all() if row.role in _API_ROLE]
+
+    starts = _turn_starts(rows)
+    if len(starts) > HISTORY_TURNS:
+        # Drop old turns HISTORY_TURNS at a time, not one per turn: a prefix
+        # that shifts every turn would never be read from the prompt cache.
+        keep = HISTORY_TURNS + (len(starts) - HISTORY_TURNS) % HISTORY_TURNS
+        rows = rows[starts[-keep]:]
+        starts = _turn_starts(rows)
+
+    full_from = starts[-FULL_RESULT_TURNS] if len(starts) > FULL_RESULT_TURNS else 0
+
+    history = []
+    for i, row in enumerate(rows):
+        content = _sort_json_keys(row.content)
+        if row.role == ChatMessage.Role.TOOL_RESULT and i < full_from:
+            # tool_use_id stays, so each tool_use still has its result.
+            content = [{**block, 'content': STALE_RESULT} for block in content]
+        history.append({'role': _API_ROLE[row.role], 'content': content})
+    return history
 
 
 def _blocks(message):
